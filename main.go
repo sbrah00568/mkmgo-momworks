@@ -13,70 +13,147 @@ import (
 	"time"
 
 	"github.com/xuri/excelize/v2"
+	"gopkg.in/yaml.v2"
 )
 
+type XlsxColumn struct {
+	Code   string `yaml:"code"`
+	Index  int    `yaml:"index"`
+	Name   string `yaml:"name"`
+	Label  string `yaml:"label"`
+	Length int    `yaml:"length"`
+}
+
+type Config struct {
+	ColumnDataImunisasiBayi    []XlsxColumn `yaml:"column_data_imunisasi_bayi"`
+	ColumnDataImunaisasiBaduta []XlsxColumn `yaml:"column_data_imunisasi_baduta"`
+	ColumnSasaranKejarBayi     []XlsxColumn `yaml:"column_sasaran_kejar_bayi"`
+	ColumnSasaranKejarBaduta   []XlsxColumn `yaml:"column_sasaran_kejar_baduta"`
+}
+
+func LoadConfig() (*Config, error) {
+	file, err := os.Open("config.yaml")
+	if err != nil {
+		return nil, fmt.Errorf("error opening file: %w", err)
+	}
+	defer file.Close()
+
+	decoder := yaml.NewDecoder(file)
+	var cfg Config
+	if err := decoder.Decode(&cfg); err != nil {
+		return nil, fmt.Errorf("error decoding YAML: %w", err)
+	}
+
+	return &cfg, nil
+}
+
 func main() {
-	http.HandleFunc("/momworks/imunisasi/kejar/bayi", GetSasaranImunisasiKejarBayiHandler)
+	cfg, err := LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	sasaranKejarHandler := NewSasaranKejarHandler(NewKejarBayiService(cfg), NewKejarBadutaService(cfg))
+
+	http.HandleFunc("/momworks/sasaran/kejar", sasaranKejarHandler.GenerateFileHandler)
 	log.Println("Starting momworks server....")
 	if err := http.ListenAndServe("localhost:8080", nil); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
 }
 
-// GetSasaranImunisasiKejarBayiHandler processes uploaded Excel files for immunization data.
-// It retrieves data based on the provided sheet name and generates a downloadable Excel file.
-func GetSasaranImunisasiKejarBayiHandler(w http.ResponseWriter, r *http.Request) {
-	const maxUploadSize = 10 << 20 // Set max upload size to 10 MB
+type SourceXlsxFile struct {
+	TempFilePath string
+	SheetName    string
+	ExcelizeFile *excelize.File
+}
 
-	// Parse the multipart form
+type XlsxGeneratedFile struct {
+	FileName     string
+	ExcelizeFile *excelize.File
+}
+
+type XlsxFileTransformer interface {
+	GenerateFile(sourceFile SourceXlsxFile) (*XlsxGeneratedFile, error)
+}
+
+type SasaranKejarHandler struct {
+	KejarBayiService   XlsxFileTransformer
+	KejarBadutaService XlsxFileTransformer
+}
+
+func NewSasaranKejarHandler(bayiSvc, badutaSvc XlsxFileTransformer) *SasaranKejarHandler {
+	return &SasaranKejarHandler{
+		KejarBayiService:   bayiSvc,
+		KejarBadutaService: badutaSvc,
+	}
+}
+
+func (h *SasaranKejarHandler) GenerateFileHandler(w http.ResponseWriter, r *http.Request) {
+	const maxUploadSize = 10 << 20
+
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
 		http.Error(w, "File size too large", http.StatusBadRequest)
 		log.Printf("File upload error: %v", err)
 		return
 	}
 
-	// Retrieve the file from the form
-	file, fileHeader, err := r.FormFile("myFile")
+	src, fileHeader, err := r.FormFile("myFile")
 	if err != nil {
 		http.Error(w, "Failed to retrieve file", http.StatusBadRequest)
 		log.Printf("Error retrieving file: %v", err)
 		return
 	}
-	defer file.Close()
+	defer src.Close()
 
 	log.Printf("Uploaded File: %s, Size: %d, MIME: %v", fileHeader.Filename, fileHeader.Size, fileHeader.Header)
 
-	// Save the uploaded file to a temporary location
-	tempFilePath, err := saveFileToTemp(file, fileHeader.Filename)
+	tempFilePath, err := SaveFileToTemp(src, fileHeader.Filename)
 	if err != nil {
 		http.Error(w, "Failed to save file", http.StatusInternalServerError)
 		log.Printf("Error saving file: %v", err)
 		return
 	}
-	defer os.Remove(tempFilePath) // Clean up temp file after processing
+	defer os.Remove(tempFilePath)
 
-	// Process the Excel file and retrieve data
-	dataImunisasiBayi, err := dataImunisasiBayiRetriever(tempFilePath, r.FormValue("sheetName"))
+	sheetName := r.FormValue("sheetName")
+
+	excelizeFile, err := OpenFile(tempFilePath)
 	if err != nil {
-		http.Error(w, "Error processing file", http.StatusInternalServerError)
-		log.Printf("Error processing Excel file: %v", err)
+		http.Error(w, "Failed to open file", http.StatusInternalServerError)
+		log.Printf("Error opening Excel file: %v", err)
+		return
+	}
+	defer excelizeFile.Close()
+
+	var service XlsxFileTransformer
+	switch r.FormValue("type") {
+	case "bayi":
+		service = h.KejarBayiService
+	case "baduta":
+		service = h.KejarBadutaService
+	default:
+		http.Error(w, "invalid sasaran type. Must be either bayi or baduta", http.StatusBadRequest)
+		log.Printf("Invalid sasaran type: %s", r.FormValue("type"))
 		return
 	}
 
-	// Write data kejar asik bayi excel file
-	sasaranImunisasiKejarBayiFile, err := createNewSasaranImunisasiKejarBayiFile(dataImunisasiBayi)
+	sourceFile := SourceXlsxFile{
+		TempFilePath: tempFilePath,
+		SheetName:    sheetName,
+		ExcelizeFile: excelizeFile,
+	}
+	generatedFile, err := service.GenerateFile(sourceFile)
 	if err != nil {
-		http.Error(w, "Error creating new data kejar asik bayi file", http.StatusInternalServerError)
-		log.Printf("Error creating new data kejar asik bayi file: %v", err)
+		http.Error(w, "Error creating file", http.StatusInternalServerError)
+		log.Printf("Error generating file: %v", err)
 		return
 	}
 
-	// Set the content type and disposition for download
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	w.Header().Set("Content-Disposition", `attachment; filename="`+getSasaranImunisasiKejarBayiFileName()+`"`)
+	w.Header().Set("Content-Disposition", `attachment; filename="`+generatedFile.FileName+`"`)
 
-	// Write the file to the response
-	if err := sasaranImunisasiKejarBayiFile.Write(w); err != nil {
+	if err := generatedFile.ExcelizeFile.Write(w); err != nil {
 		http.Error(w, "Unable to generate file", http.StatusInternalServerError)
 		return
 	}
@@ -84,31 +161,7 @@ func GetSasaranImunisasiKejarBayiHandler(w http.ResponseWriter, r *http.Request)
 	log.Println("Successfully uploaded and processed file")
 }
 
-// getSasaranImunisasiKejarBayiFileName returns file name for Sasaran Imunisasi Kejar Bayi
-func getSasaranImunisasiKejarBayiFileName() string {
-	currentDate := time.Now()
-
-	months := map[time.Month]string{
-		time.January:   "Januari",
-		time.February:  "Februari",
-		time.March:     "Maret",
-		time.April:     "April",
-		time.May:       "Mei",
-		time.June:      "Juni",
-		time.July:      "Juli",
-		time.August:    "Agustus",
-		time.September: "September",
-		time.October:   "Oktober",
-		time.November:  "November",
-		time.December:  "Desember",
-	}
-
-	month := months[currentDate.Month()]
-	return "Sasaran Imunisasi Kejar Bayi " + strconv.Itoa(currentDate.Day()) + " " + month + ".xlsx"
-}
-
-// saveFileToTemp saves the uploaded file to a temporary location and returns the path.
-func saveFileToTemp(file io.Reader, filename string) (string, error) {
+func SaveFileToTemp(file io.Reader, filename string) (string, error) {
 	tempFile, err := os.CreateTemp("temp", filepath.Base(filename)+"-*.xlsx")
 	if err != nil {
 		log.Printf("Error creating temp file: %v", err)
@@ -116,7 +169,6 @@ func saveFileToTemp(file io.Reader, filename string) (string, error) {
 	}
 	defer tempFile.Close()
 
-	// Copy the file content to the temporary file
 	if _, err := io.Copy(tempFile, file); err != nil {
 		log.Printf("Error writing to temp file: %v", err)
 		return "", fmt.Errorf("failed to write to temp file: %w", err)
@@ -125,565 +177,93 @@ func saveFileToTemp(file io.Reader, filename string) (string, error) {
 	return tempFile.Name(), nil
 }
 
-// DataImunisasiBayi represents the vaccination record for bayi.
-type DataImunisasiBayi struct {
-	ID               string    `json:"id"`
-	NikAnak          string    `json:"nikAnak"`
-	NamaAnak         string    `json:"namaAnak"`
-	TanggalLahirAnak string    `json:"tanggalLahirAnak"`
-	JenisKelaminAnak string    `json:"jenisKelaminAnak"`
-	NikOrangTua      string    `json:"nikOrangTua"`
-	NamaOrangTua     string    `json:"namaOrangTua"`
-	Alamat           Alamat    `json:"alamat"`
-	Imunisasi        Imunisasi `json:"imunisasi"`
-}
-
-// Alamat represents the address details of the family.
-type Alamat struct {
-	Provinsi      string `json:"provinsi"`
-	KabupatenKota string `json:"kabupatenKota"`
-	Kecamatan     string `json:"kecamatan"`
-	KelurahanDesa string `json:"kelurahanDesa"`
-	KodePuskesmas string `json:"kodePuskesmas"`
-	Puskesmas     string `json:"puskesmas"`
-}
-
-// Imunisasi represents the immunization records for bayi.
-type Imunisasi struct {
-	HB0       VaksinInfo `json:"hb0"`
-	BCG1      VaksinInfo `json:"bcg1"`
-	Polio1    VaksinInfo `json:"polio1"`
-	Polio2    VaksinInfo `json:"polio2"`
-	Polio3    VaksinInfo `json:"polio3"`
-	Polio4    VaksinInfo `json:"polio4"`
-	DPTHbHib1 VaksinInfo `json:"dpthhb1"`
-	DPTHbHib2 VaksinInfo `json:"dpthhb2"`
-	DPTHbHib3 VaksinInfo `json:"dpthhb3"`
-	IPV1      VaksinInfo `json:"ipv1"`
-	IPV2      VaksinInfo `json:"ipv2"`
-	ROTA1     VaksinInfo `json:"rota1"`
-	ROTA2     VaksinInfo `json:"rota2"`
-	ROTA3     VaksinInfo `json:"rota3"`
-	PCV1      VaksinInfo `json:"pcv1"`
-	PCV2      VaksinInfo `json:"pcv2"`
-	JE1       VaksinInfo `json:"je1"`
-	MR1       VaksinInfo `json:"mr1"`
-	IDL1      VaksinInfo `json:"idl1"`
-}
-
-// VaksinInfo contains details about each vaccination.
-type VaksinInfo struct {
-	Tanggal             string `json:"tanggal"`
-	TanggalInput        string `json:"tanggalInput"`
-	PosImunisasi        string `json:"posImunisasi"`
-	PkmPemberiImunisasi string `json:"pkmPemberiImunisasi"`
-	StatusImunisasi     string `json:"statusImunisasi"`
-	SumberPencatatan    string `json:"sumberPencatatan"`
-}
-
-// dataImunisasiBayiRetriever opens the Excel file, reads the specified sheet, and returns list of data imunisasi bayi.
-func dataImunisasiBayiRetriever(filePath, sheetName string) ([]DataImunisasiBayi, error) {
+func OpenFile(filePath string) (*excelize.File, error) {
 	file, err := excelize.OpenFile(filePath)
 	if err != nil {
-		log.Printf("Error opening Excel file: %v", err)
 		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	return file, nil
+}
 
-	// Retrieve rows from the specified sheet
-	rows, err := file.GetRows(sheetName)
+type NewXlsxFile struct {
+	SheetName      string
+	ExcelizeFile   *excelize.File
+	TitleRowAt     int
+	HeaderRowAt    int
+	StartBodyRowAt int
+	TitleStyle     int
+	HeaderStyle    int
+	BodyStyle      int
+}
+
+type NewXlsxGenerator interface {
+	SetTitle(newFile NewXlsxFile)
+	SetHeader(newFile NewXlsxFile)
+	SetBody(newFile NewXlsxFile)
+	SetColumnWidth(newFile NewXlsxFile)
+}
+
+func CreateNewXlsxFile(generator NewXlsxGenerator) (*excelize.File, error) {
+	excelizeFile := excelize.NewFile()
+	sheetName := "Sheet1"
+	index, err := excelizeFile.NewSheet(sheetName)
 	if err != nil {
-		log.Printf("Error getting rows from Excel sheet: %v", err)
-		return nil, fmt.Errorf("failed to get rows: %w", err)
+		return nil, err
 	}
 
-	return mapRowsToDataImunisasiBayiList(rows, file, sheetName), nil
-}
+	excelizeFile.SetActiveSheet(index)
+	excelizeFile.SetDefaultFont("Times New Roman")
 
-// columnName generates the Excel-style column names for the first n columns.
-func columnName(n int) []string {
-	var result []string
-	for i := 1; i <= n; i++ {
-		result = append(result, getColumnName(i))
+	newXlsxFile := NewXlsxFile{
+		SheetName:      sheetName,
+		ExcelizeFile:   excelizeFile,
+		TitleRowAt:     0,
+		HeaderRowAt:    2,
+		StartBodyRowAt: 3,
 	}
-	return result
-}
 
-// getColumnName converts a column number to its Excel-style letter representation.
-func getColumnName(i int) string {
-	columns := ""
-	for i > 0 {
-		i--
-		columns = string('A'+i%26) + columns
-		i /= 26
-	}
-	return columns
-}
-
-// mapRowsToDataImunisasiBayiList converts the rows from the Excel file to a list of DataImunisasiBayi.
-func mapRowsToDataImunisasiBayiList(rows [][]string, file *excelize.File, sheetName string) []DataImunisasiBayi {
-	var dataImunisasiBayiList []DataImunisasiBayi
-	for i := 0; i < len(rows); i++ {
-		if i != 0 { // skip header
-			adjustedCellValues := cellValuesAdjuster(rows, file, sheetName, i)
-			dataImunisasiBayi := mapCellValuesToDataImunisasiBayi(adjustedCellValues)
-			if dataImunisasiBayi != nil {
-				dataImunisasiBayiList = append(dataImunisasiBayiList, *dataImunisasiBayi)
-			}
-		}
-	}
-	return dataImunisasiBayiList
-}
-
-// cellValuesAdjuster adjusts cell values when error or blank
-func cellValuesAdjuster(rows [][]string, file *excelize.File, sheetName string, rowIndex int) []string {
-	var adjustedCellValues []string
-	for _, columnNameList := range columnName(len(rows[0])) {
-		cell := columnNameList + strconv.Itoa(rowIndex+1)
-		cellValue, err := file.GetCellValue(sheetName, cell)
-		if err != nil {
-			log.Printf("Error getting cell value: %v", err)
-			cellValue = "-"
-		}
-
-		if cellValue == "" {
-			cellValue = "-"
-		}
-		adjustedCellValues = append(adjustedCellValues, cellValue)
-	}
-	return adjustedCellValues
-}
-
-// mapCellValuesToDataImunisasiBayi converts a single row of strings into a DataImunisasiBayi record.
-func mapCellValuesToDataImunisasiBayi(cell []string) *DataImunisasiBayi {
-	record := DataImunisasiBayi{
-		ID:               cell[0],
-		NikAnak:          cell[1],
-		NamaAnak:         cell[2],
-		TanggalLahirAnak: cell[3],
-		JenisKelaminAnak: cell[4],
-		NikOrangTua:      cell[5],
-		NamaOrangTua:     cell[6],
-		Alamat: Alamat{
-			Provinsi:      cell[7],
-			KabupatenKota: cell[8],
-			Kecamatan:     cell[9],
-			KelurahanDesa: cell[10],
-			KodePuskesmas: cell[11],
-			Puskesmas:     cell[12],
-		},
-		Imunisasi: Imunisasi{
-			HB0: VaksinInfo{
-				Tanggal:             cell[13],
-				TanggalInput:        cell[14],
-				PosImunisasi:        cell[15],
-				PkmPemberiImunisasi: cell[16],
-				StatusImunisasi:     cell[17],
-				SumberPencatatan:    cell[18],
+	titleStyle, err := excelizeFile.NewStyle(
+		&excelize.Style{
+			Font: &excelize.Font{
+				Size:      22,
+				Bold:      true,
+				Color:     blackColor,
+				VertAlign: "center",
 			},
-			BCG1: VaksinInfo{
-				Tanggal:             cell[19],
-				TanggalInput:        cell[20],
-				PosImunisasi:        cell[21],
-				PkmPemberiImunisasi: cell[22],
-				StatusImunisasi:     cell[23],
-				SumberPencatatan:    cell[24],
-			},
-			Polio1: VaksinInfo{
-				Tanggal:             cell[25],
-				TanggalInput:        cell[26],
-				PosImunisasi:        cell[27],
-				PkmPemberiImunisasi: cell[28],
-				StatusImunisasi:     cell[29],
-				SumberPencatatan:    cell[30],
-			},
-			Polio2: VaksinInfo{
-				Tanggal:             cell[31],
-				TanggalInput:        cell[32],
-				PosImunisasi:        cell[33],
-				PkmPemberiImunisasi: cell[34],
-				StatusImunisasi:     cell[35],
-				SumberPencatatan:    cell[36],
-			},
-			Polio3: VaksinInfo{
-				Tanggal:             cell[37],
-				TanggalInput:        cell[38],
-				PosImunisasi:        cell[39],
-				PkmPemberiImunisasi: cell[40],
-				StatusImunisasi:     cell[41],
-				SumberPencatatan:    cell[42],
-			},
-			Polio4: VaksinInfo{
-				Tanggal:             cell[43],
-				TanggalInput:        cell[44],
-				PosImunisasi:        cell[45],
-				PkmPemberiImunisasi: cell[46],
-				StatusImunisasi:     cell[47],
-				SumberPencatatan:    cell[48],
-			},
-			DPTHbHib1: VaksinInfo{
-				Tanggal:             cell[49],
-				TanggalInput:        cell[50],
-				PosImunisasi:        cell[51],
-				PkmPemberiImunisasi: cell[52],
-				StatusImunisasi:     cell[53],
-				SumberPencatatan:    cell[54],
-			},
-			DPTHbHib2: VaksinInfo{
-				Tanggal:             cell[55],
-				TanggalInput:        cell[56],
-				PosImunisasi:        cell[57],
-				PkmPemberiImunisasi: cell[58],
-				StatusImunisasi:     cell[59],
-				SumberPencatatan:    cell[60],
-			},
-			DPTHbHib3: VaksinInfo{
-				Tanggal:             cell[61],
-				TanggalInput:        cell[62],
-				PosImunisasi:        cell[63],
-				PkmPemberiImunisasi: cell[64],
-				StatusImunisasi:     cell[65],
-				SumberPencatatan:    cell[66],
-			},
-			IPV1: VaksinInfo{
-				Tanggal:             cell[67],
-				TanggalInput:        cell[68],
-				PosImunisasi:        cell[69],
-				PkmPemberiImunisasi: cell[70],
-				StatusImunisasi:     cell[71],
-				SumberPencatatan:    cell[72],
-			},
-			IPV2: VaksinInfo{
-				Tanggal:             cell[73],
-				TanggalInput:        cell[74],
-				PosImunisasi:        cell[75],
-				PkmPemberiImunisasi: cell[76],
-				StatusImunisasi:     cell[77],
-				SumberPencatatan:    cell[78],
-			},
-			ROTA1: VaksinInfo{
-				Tanggal:             cell[79],
-				TanggalInput:        cell[80],
-				PosImunisasi:        cell[81],
-				PkmPemberiImunisasi: cell[82],
-				StatusImunisasi:     cell[83],
-				SumberPencatatan:    cell[84],
-			},
-			ROTA2: VaksinInfo{
-				Tanggal:             cell[85],
-				TanggalInput:        cell[86],
-				PosImunisasi:        cell[87],
-				PkmPemberiImunisasi: cell[88],
-				StatusImunisasi:     cell[89],
-				SumberPencatatan:    cell[90],
-			},
-			ROTA3: VaksinInfo{
-				Tanggal:             cell[91],
-				TanggalInput:        cell[92],
-				PosImunisasi:        cell[93],
-				PkmPemberiImunisasi: cell[94],
-				StatusImunisasi:     cell[95],
-				SumberPencatatan:    cell[96],
-			},
-			PCV1: VaksinInfo{
-				Tanggal:             cell[97],
-				TanggalInput:        cell[98],
-				PosImunisasi:        cell[99],
-				PkmPemberiImunisasi: cell[100],
-				StatusImunisasi:     cell[101],
-				SumberPencatatan:    cell[102],
-			},
-			PCV2: VaksinInfo{
-				Tanggal:             cell[103],
-				TanggalInput:        cell[104],
-				PosImunisasi:        cell[105],
-				PkmPemberiImunisasi: cell[106],
-				StatusImunisasi:     cell[107],
-				SumberPencatatan:    cell[108],
-			},
-			JE1: VaksinInfo{
-				Tanggal:             cell[109],
-				TanggalInput:        cell[110],
-				PosImunisasi:        cell[111],
-				PkmPemberiImunisasi: cell[112],
-				StatusImunisasi:     cell[113],
-				SumberPencatatan:    cell[114],
-			},
-			MR1: VaksinInfo{
-				Tanggal:             cell[115],
-				TanggalInput:        cell[116],
-				PosImunisasi:        cell[117],
-				PkmPemberiImunisasi: cell[118],
-				StatusImunisasi:     cell[119],
-				SumberPencatatan:    cell[120],
-			},
-			IDL1: VaksinInfo{
-				Tanggal:             cell[121],
-				TanggalInput:        cell[122],
-				PosImunisasi:        cell[123],
-				PkmPemberiImunisasi: cell[124],
-				StatusImunisasi:     cell[125],
-				SumberPencatatan:    cell[126],
+			Alignment: &excelize.Alignment{
+				Horizontal: "center",
 			},
 		},
-	}
-
-	return &record
-}
-
-// SasaranImunisasiKejarBayi represents represents the data of a baby that requires follow-up
-// immunization due to missed scheduled vaccinations.
-type SasaranImunisasiKejarBayi struct {
-	NamaAnak         string `json:"namaAnak"`
-	UsiaAnak         string `json:"usiaAnak"`
-	TanggalLahirAnak string `json:"tanggalLahirAnak"`
-	JenisKelaminAnak string `json:"jenisKelaminAnak"`
-	NamaOrangTua     string `json:"namaOrangTua"`
-	HBO              int    `json:"hbo"`
-	BCG1             int    `json:"bcg1"`
-	POLIO1           int    `json:"polio1"`
-	POLIO2           int    `json:"polio2"`
-	POLIO3           int    `json:"polio3"`
-	POLIO4           int    `json:"polio4"`
-	DPTHbHib1        int    `json:"dptHbHib1"`
-	DPTHbHib2        int    `json:"dptHbHib2"`
-	DPTHbHib3        int    `json:"dptHbHib3"`
-	IPV1             int    `json:"ipv1"`
-	IPV2             int    `json:"ipv2"`
-	ROTA1            int    `json:"rota1"`
-	ROTA2            int    `json:"rota2"`
-	ROTA3            int    `json:"rota3"`
-	PCV1             int    `json:"pcv1"`
-	PCV2             int    `json:"pcv2"`
-	JE1              int    `json:"je1"`
-	MR1              int    `json:"mr1"`
-	IDL1             int    `json:"idl1"`
-}
-
-// newSasaranImunisasiKejarBayiList converts a list of DataImunisasiBayi records into a list of SasaranImunisasiKejarBayi records.
-// Only records that pass the validation checks will be added to the resulting list.
-func newSasaranImunisasiKejarBayiList(dataImunisasiBayiList []DataImunisasiBayi) []SasaranImunisasiKejarBayi {
-	sasaranImunisasiKejarBayiList := make([]SasaranImunisasiKejarBayi, 0, len(dataImunisasiBayiList)-1)
-	for i := 1; i < len(dataImunisasiBayiList); i++ { // Skip header
-		sasaranImunisasiKejarBayi := newSasaranImunisasiKejarBayi(&dataImunisasiBayiList[i])
-		if sasaranImunisasiKejarBayi != nil {
-			sasaranImunisasiKejarBayiList = append(sasaranImunisasiKejarBayiList, *sasaranImunisasiKejarBayi)
-		}
-	}
-	return sasaranImunisasiKejarBayiList
-}
-
-// newSasaranImunisasiKejarBayi creates a new SasaranImunisasiKejarBayi record from a DataImunisasiBayi object.
-// The function calculates the child's age, checks the immunization status, and ensures the data is valid.
-func newSasaranImunisasiKejarBayi(dataImunisasiBayi *DataImunisasiBayi) *SasaranImunisasiKejarBayi {
-	usiaAnak, err := calculateUsiaAnak(dataImunisasiBayi.TanggalLahirAnak)
+	)
 	if err != nil {
-		return nil
+		titleStyle = 0
 	}
+	newXlsxFile.TitleStyle = titleStyle
 
-	imunisasi := dataImunisasiBayi.Imunisasi
-	if isAllImunisasiIdeal(imunisasi) || isPemberiImunivasiInvalid(imunisasi) || isPosImunivasiInvalid(imunisasi) {
-		return nil
-	}
+	headerStyle := SetXlsxStyle(excelizeFile, true)
+	newXlsxFile.HeaderStyle = headerStyle
 
-	return &SasaranImunisasiKejarBayi{
-		NamaAnak:         dataImunisasiBayi.NamaAnak,
-		UsiaAnak:         usiaAnak,
-		TanggalLahirAnak: dataImunisasiBayi.TanggalLahirAnak,
-		JenisKelaminAnak: dataImunisasiBayi.JenisKelaminAnak,
-		NamaOrangTua:     dataImunisasiBayi.NamaOrangTua,
-		HBO:              getStatusImunisasiKejar(imunisasi.HB0.StatusImunisasi),
-		BCG1:             getStatusImunisasiKejar(imunisasi.BCG1.StatusImunisasi),
-		POLIO1:           getStatusImunisasiKejar(imunisasi.Polio1.StatusImunisasi),
-		POLIO2:           getStatusImunisasiKejar(imunisasi.Polio2.StatusImunisasi),
-		POLIO3:           getStatusImunisasiKejar(imunisasi.Polio3.StatusImunisasi),
-		POLIO4:           getStatusImunisasiKejar(imunisasi.Polio4.StatusImunisasi),
-		DPTHbHib1:        getStatusImunisasiKejar(imunisasi.DPTHbHib1.StatusImunisasi),
-		DPTHbHib2:        getStatusImunisasiKejar(imunisasi.DPTHbHib2.StatusImunisasi),
-		DPTHbHib3:        getStatusImunisasiKejar(imunisasi.DPTHbHib3.StatusImunisasi),
-		IPV1:             getStatusImunisasiKejar(imunisasi.IPV1.StatusImunisasi),
-		IPV2:             getStatusImunisasiKejar(imunisasi.IPV2.StatusImunisasi),
-		ROTA1:            getStatusImunisasiKejar(imunisasi.ROTA1.StatusImunisasi),
-		ROTA2:            getStatusImunisasiKejar(imunisasi.ROTA2.StatusImunisasi),
-		ROTA3:            getStatusImunisasiKejar(imunisasi.ROTA3.StatusImunisasi),
-		PCV1:             getStatusImunisasiKejar(imunisasi.PCV1.StatusImunisasi),
-		PCV2:             getStatusImunisasiKejar(imunisasi.PCV2.StatusImunisasi),
-		JE1:              getStatusImunisasiKejar(imunisasi.JE1.StatusImunisasi),
-		MR1:              getStatusImunisasiKejar(imunisasi.MR1.StatusImunisasi),
-		IDL1:             getStatusImunisasiKejar(imunisasi.IDL1.StatusImunisasi),
-	}
-}
+	bodyStyle := SetXlsxStyle(excelizeFile, false)
+	newXlsxFile.BodyStyle = bodyStyle
 
-// calculateUsiaAnak calculates the age of the child based on their birthdate and the current date.
-func calculateUsiaAnak(tanggalLahirAnak string) (string, error) {
-	birthDate, err := time.Parse("2006-01-02", tanggalLahirAnak)
-	if err != nil {
-		log.Printf("Failed to parse tanggal lahir anak: %v", err)
-		return "", err
-	}
+	generator.SetTitle(newXlsxFile)
+	generator.SetHeader(newXlsxFile)
+	generator.SetBody(newXlsxFile)
+	generator.SetColumnWidth(newXlsxFile)
 
-	currentDate := time.Now()
-	months := currentDate.Year()*12 + int(currentDate.Month()) - (birthDate.Year()*12 + int(birthDate.Month()))
-	days := currentDate.Day() - birthDate.Day()
-
-	if days < 0 {
-		months--
-		days += time.Date(currentDate.Year(), currentDate.Month(), 0, 0, 0, 0, 0, currentDate.Location()).Day()
-	}
-
-	return fmt.Sprintf("%d Bulan %d Hari", months, days), nil
-}
-
-// getStatusImunisasiKejar returns the immunization status as "0" (ideal) or "1" (need catch-up).
-func getStatusImunisasiKejar(status string) int {
-	if status == "ideal" {
-		return 0
-	}
-	return 1
-}
-
-// isAllImunisasiIdeal checks if all immunizations for a baby are ideal.
-// Returns true if all immunizations are ideal.
-func isAllImunisasiIdeal(imunisasi Imunisasi) bool {
-	statuses := []string{
-		imunisasi.HB0.StatusImunisasi,
-		imunisasi.BCG1.StatusImunisasi,
-		imunisasi.Polio1.StatusImunisasi,
-		imunisasi.Polio2.StatusImunisasi,
-		imunisasi.Polio3.StatusImunisasi,
-		imunisasi.Polio4.StatusImunisasi,
-		imunisasi.DPTHbHib1.StatusImunisasi,
-		imunisasi.DPTHbHib2.StatusImunisasi,
-		imunisasi.DPTHbHib3.StatusImunisasi,
-		imunisasi.IPV1.StatusImunisasi,
-		imunisasi.IPV2.StatusImunisasi,
-		imunisasi.ROTA1.StatusImunisasi,
-		imunisasi.ROTA2.StatusImunisasi,
-		imunisasi.ROTA3.StatusImunisasi,
-		imunisasi.PCV1.StatusImunisasi,
-		imunisasi.PCV2.StatusImunisasi,
-		imunisasi.JE1.StatusImunisasi,
-		imunisasi.MR1.StatusImunisasi,
-		imunisasi.IDL1.StatusImunisasi,
-	}
-
-	for _, status := range statuses {
-		if status != "ideal" {
-			return false
-		}
-	}
-	return true
-}
-
-// isPemberiImunivasiInvalid checks if the provider for immunization is invalid.
-// Returns true if pemberi imunisasi is "invalid".
-func isPemberiImunivasiInvalid(imunisasi Imunisasi) bool {
-	pemberiImunisasiList := []string{
-		imunisasi.HB0.PkmPemberiImunisasi,
-		imunisasi.BCG1.PkmPemberiImunisasi,
-		imunisasi.Polio1.PkmPemberiImunisasi,
-		imunisasi.Polio2.PkmPemberiImunisasi,
-		imunisasi.Polio3.PkmPemberiImunisasi,
-		imunisasi.Polio4.PkmPemberiImunisasi,
-		imunisasi.DPTHbHib1.PkmPemberiImunisasi,
-		imunisasi.DPTHbHib2.PkmPemberiImunisasi,
-		imunisasi.DPTHbHib3.PkmPemberiImunisasi,
-		imunisasi.IPV1.PkmPemberiImunisasi,
-		imunisasi.IPV2.PkmPemberiImunisasi,
-		imunisasi.ROTA1.PkmPemberiImunisasi,
-		imunisasi.ROTA2.PkmPemberiImunisasi,
-		imunisasi.ROTA3.PkmPemberiImunisasi,
-		imunisasi.PCV1.PkmPemberiImunisasi,
-		imunisasi.PCV2.PkmPemberiImunisasi,
-		imunisasi.JE1.PkmPemberiImunisasi,
-		imunisasi.MR1.PkmPemberiImunisasi,
-		imunisasi.IDL1.PkmPemberiImunisasi,
-	}
-
-	for _, pemberiImunisasi := range pemberiImunisasiList {
-		pemberi := strings.ToLower(pemberiImunisasi)
-		if pemberi == "-" {
-			continue
-		}
-		if strings.Contains(pemberi, "wanasari") {
-			return false
-		}
-	}
-	return true
-}
-
-// isPosImunivasiInvalid checks if pos imunisasi is invalid.
-// Returns true if pos imunisasi name is "invalid".
-func isPosImunivasiInvalid(imunisasi Imunisasi) bool {
-	posImunisasiList := []string{
-		imunisasi.HB0.PosImunisasi,
-		imunisasi.BCG1.PosImunisasi,
-		imunisasi.Polio1.PosImunisasi,
-		imunisasi.Polio2.PosImunisasi,
-		imunisasi.Polio3.PosImunisasi,
-		imunisasi.Polio4.PosImunisasi,
-		imunisasi.DPTHbHib1.PosImunisasi,
-		imunisasi.DPTHbHib2.PosImunisasi,
-		imunisasi.DPTHbHib3.PosImunisasi,
-		imunisasi.IPV1.PosImunisasi,
-		imunisasi.IPV2.PosImunisasi,
-		imunisasi.ROTA1.PosImunisasi,
-		imunisasi.ROTA2.PosImunisasi,
-		imunisasi.ROTA3.PosImunisasi,
-		imunisasi.PCV1.PosImunisasi,
-		imunisasi.PCV2.PosImunisasi,
-		imunisasi.JE1.PosImunisasi,
-		imunisasi.MR1.PosImunisasi,
-		imunisasi.IDL1.PosImunisasi,
-	}
-
-	for _, posImunisasi := range posImunisasiList {
-		pos := strings.ToLower(posImunisasi)
-		if pos == "-" {
-			continue
-		}
-		if strings.Contains(pos, "wanasari") {
-			return false
-		}
-		if strings.Contains(pos, "dalam gedung") {
-			return false
-		}
-		if strings.Contains(pos, "oleh sistem") {
-			return false
-		}
-	}
-	return true
-}
-
-// sortByTanggalLahir sorts dataImunisasiBayiList by tanggal lahir asc
-func sortByTanggalLahir(dataImunisasiBayiList []DataImunisasiBayi) {
-	sort.Slice(dataImunisasiBayiList, func(i, j int) bool {
-		dateFormat := "2006-01-02"
-		dateI, errI := time.Parse(dateFormat, dataImunisasiBayiList[i].TanggalLahirAnak)
-		if errI != nil {
-			log.Printf("Error parsing date for index %d: %v", i, errI)
-			return false
-		}
-		dateJ, errJ := time.Parse(dateFormat, dataImunisasiBayiList[j].TanggalLahirAnak)
-		if errJ != nil {
-			log.Printf("Error parsing date for index %d: %v", j, errJ)
-			return false
-		}
-		return dateI.Before(dateJ)
-	})
+	return excelizeFile, nil
 }
 
 const blackColor = "#000000"
 
-// setStyle sets style for header
-func setStyle(file *excelize.File, isHeader bool) (int, error) {
+func SetXlsxStyle(file *excelize.File, isHeader bool) int {
 
 	bold := false
 	if isHeader {
 		bold = true
 	}
 
-	headerStyle, err := file.NewStyle(
+	style, err := file.NewStyle(
 		&excelize.Style{
 			Font: &excelize.Font{
 				Size:      12,
@@ -721,184 +301,522 @@ func setStyle(file *excelize.File, isHeader bool) (int, error) {
 
 	if err != nil {
 		log.Printf("Error creating style for header: %v", err)
-		return 0, err
+		return 0
 	}
 
-	return headerStyle, err
+	return style
 }
 
-// createNewExcelFile creates new excel file with given sheetName as default sheet name
-func createNewExcelFile(sheetName string) (*excelize.File, error) {
-	file := excelize.NewFile()
-	index, err := file.NewSheet(sheetName)
+func GetCurrentDateStr() string {
+	months := map[time.Month]string{
+		time.January:   "Januari",
+		time.February:  "Februari",
+		time.March:     "Maret",
+		time.April:     "April",
+		time.May:       "Mei",
+		time.June:      "Juni",
+		time.July:      "Juli",
+		time.August:    "Agustus",
+		time.September: "September",
+		time.October:   "Oktober",
+		time.November:  "November",
+		time.December:  "Desember",
+	}
+
+	currentDate := time.Now()
+	return strconv.Itoa(currentDate.Day()) + " " + months[currentDate.Month()]
+}
+
+type SasaranKejarBayi struct {
+	NamaAnak         string `json:"namaAnak"`
+	UsiaAnak         string `json:"usiaAnak"`
+	TanggalLahirAnak string `json:"tanggalLahirAnak"`
+	JenisKelaminAnak string `json:"jenisKelaminAnak"`
+	NamaOrangTua     string `json:"namaOrangTua"`
+	Puskesmas        string `json:"puskesmas"`
+	HBO              int    `json:"hbo"`
+	BCG1             int    `json:"bcg1"`
+	POLIO1           int    `json:"polio1"`
+	POLIO2           int    `json:"polio2"`
+	POLIO3           int    `json:"polio3"`
+	POLIO4           int    `json:"polio4"`
+	DPTHbHib1        int    `json:"dptHbHib1"`
+	DPTHbHib2        int    `json:"dptHbHib2"`
+	DPTHbHib3        int    `json:"dptHbHib3"`
+	IPV1             int    `json:"ipv1"`
+	IPV2             int    `json:"ipv2"`
+	ROTA1            int    `json:"rota1"`
+	ROTA2            int    `json:"rota2"`
+	ROTA3            int    `json:"rota3"`
+	PCV1             int    `json:"pcv1"`
+	PCV2             int    `json:"pcv2"`
+	JE1              int    `json:"je1"`
+	MR1              int    `json:"mr1"`
+	IDL1             int    `json:"idl1"`
+}
+
+func (s *SasaranKejarBayi) SetCellValue(code, cell string, sourceFile SourceXlsxFile) {
+	cellHandlers := map[string]func(){
+		"nama_anak":                     func() { s.NamaAnak = GetCellValue(sourceFile, cell) },
+		"tanggal_lahir_anak":            func() { s.TanggalLahirAnak = GetCellValue(sourceFile, cell) },
+		"jenis_kelamin_anak":            func() { s.JenisKelaminAnak = GetCellValue(sourceFile, cell) },
+		"nama_orang_tua":                func() { s.NamaOrangTua = GetCellValue(sourceFile, cell) },
+		"status_imunisasi_hb0":          func() { s.HBO = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_bcg_1":        func() { s.BCG1 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_polio_1":      func() { s.POLIO1 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_polio_2":      func() { s.POLIO2 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_polio_3":      func() { s.POLIO3 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_polio_4":      func() { s.POLIO4 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_dpt_hb_hib_1": func() { s.DPTHbHib1 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_dpt_hb_hib_2": func() { s.DPTHbHib2 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_dpt_hb_hib_3": func() { s.DPTHbHib3 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_ipv_1":        func() { s.IPV1 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_ipv_2":        func() { s.IPV2 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_rota_1":       func() { s.ROTA1 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_rota_2":       func() { s.ROTA2 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_rota_3":       func() { s.ROTA3 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_pcv_1":        func() { s.PCV1 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_pcv_2":        func() { s.PCV2 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_je_1":         func() { s.JE1 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_mr_1":         func() { s.MR1 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_idl_1":                  func() { s.IDL1 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+	}
+
+	if handler, exists := cellHandlers[code]; exists {
+		handler()
+	}
+}
+
+func (s *SasaranKejarBayi) CountImunisasiTidakIdeal() int {
+	imunisasiBayiList := []int{
+		s.HBO,
+		s.BCG1,
+		s.POLIO1,
+		s.POLIO2,
+		s.POLIO3,
+		s.POLIO4,
+		s.DPTHbHib1,
+		s.DPTHbHib2,
+		s.DPTHbHib3,
+		s.IPV1,
+		s.IPV2,
+		s.ROTA1,
+		s.ROTA2,
+		s.ROTA3,
+		s.PCV1,
+		s.PCV2,
+		s.JE1,
+		s.MR1,
+		s.IDL1,
+	}
+	return SumListInt(imunisasiBayiList)
+}
+
+func (s *SasaranKejarBayi) PopulateSasaranKejar(svc *KejarBayiService, rowIndex int, sourceFile SourceXlsxFile) (bool, bool) {
+	isNoMoreRow, isImunisasiBayiValid := false, false
+
+	for _, column := range svc.DataImunisasiBayiMap {
+		isNoMoreRow = CheckForEndOfFile(column, rowIndex, sourceFile)
+		if isNoMoreRow {
+			break
+		}
+
+		isImunisasiBayiValid = IsImunisasiValid(column, rowIndex, sourceFile)
+		if isImunisasiBayiValid {
+			s.SetCellValue(column.Code, column.Label+strconv.Itoa(rowIndex), sourceFile)
+		}
+	}
+
+	return isNoMoreRow, isImunisasiBayiValid
+}
+
+func (s *SasaranKejarBayi) AppendIfValid(isImunisasiBayiValid bool, sasaranKejarBayiList []SasaranKejarBayi) []SasaranKejarBayi {
+	if s.CountImunisasiTidakIdeal() != 0 && isImunisasiBayiValid {
+		s.Puskesmas = "WANASARI"
+		s.UsiaAnak = CalculateUsiaAnak(s.TanggalLahirAnak)
+		return append(sasaranKejarBayiList, *s)
+	}
+
+	return sasaranKejarBayiList
+}
+
+type KejarBayiService struct {
+	DataImunisasiBayiMap map[string]XlsxColumn
+	SasaranKejarBayiMap  map[string]XlsxColumn
+	SasaranKejarBayiList []SasaranKejarBayi
+}
+
+func NewKejarBayiService(config *Config) *KejarBayiService {
+	return &KejarBayiService{
+		DataImunisasiBayiMap: PopulateXlsxColumnMap(config.ColumnDataImunisasiBayi),
+		SasaranKejarBayiMap:  PopulateXlsxColumnMap(config.ColumnSasaranKejarBayi),
+	}
+}
+
+func (svc *KejarBayiService) GenerateFile(sourceFile SourceXlsxFile) (*XlsxGeneratedFile, error) {
+	var sasaranKejarBayiList []SasaranKejarBayi
+	rowIndex := 2
+	for {
+		sasaranKejarBayi := SasaranKejarBayi{}
+		isNoMoreRow, isImunisasiBayiValid := sasaranKejarBayi.PopulateSasaranKejar(svc, rowIndex, sourceFile)
+
+		if isNoMoreRow {
+			break
+		}
+
+		sasaranKejarBayiList = sasaranKejarBayi.AppendIfValid(isImunisasiBayiValid, sasaranKejarBayiList)
+
+		rowIndex++
+	}
+
+	SortSasaranKejarList(sasaranKejarBayiList, func(s SasaranKejarBayi) string {
+		return s.TanggalLahirAnak
+	})
+
+	svc.SasaranKejarBayiList = sasaranKejarBayiList
+
+	excelizeFile, err := CreateNewXlsxFile(svc)
 	if err != nil {
 		return nil, err
 	}
 
-	file.SetActiveSheet(index)
-	file.SetDefaultFont("Times New Roman")
-
-	return file, nil
+	return &XlsxGeneratedFile{
+		FileName:     "Sasaran Imunisasi Kejar Bayi " + GetCurrentDateStr() + ".xlsx",
+		ExcelizeFile: excelizeFile,
+	}, nil
 }
 
-// createNewSasaranImunisasiKejarBayiFile generates an Excel file containing the follow-up
-// immunization data for babies who have missed some vaccinations.
-func createNewSasaranImunisasiKejarBayiFile(dataImunisasiBayiList []DataImunisasiBayi) (*excelize.File, error) {
-	sheetName := "Sheet1"
-	file, err := createNewExcelFile(sheetName)
+func (svc *KejarBayiService) SetTitle(newFile NewXlsxFile) {
+	file := newFile.ExcelizeFile
+	sheetName := newFile.SheetName
+	rowAt := strconv.Itoa(newFile.TitleRowAt)
+	title := "Sasaran Imunisasi Kejar Bayi " + GetCurrentDateStr()
+
+	firstCell := svc.SasaranKejarBayiMap["nama_anak"].Label + rowAt
+	lastCell := svc.SasaranKejarBayiMap["status_idl_1"].Label + rowAt
+
+	file.SetCellValue(sheetName, firstCell, title)
+	file.MergeCell(sheetName, firstCell, lastCell)
+	file.SetCellStyle(sheetName, firstCell, lastCell, newFile.TitleStyle)
+}
+
+func (svc *KejarBayiService) SetHeader(newFile NewXlsxFile) {
+	file := newFile.ExcelizeFile
+	sheetName := newFile.SheetName
+	rowAt := strconv.Itoa(newFile.HeaderRowAt)
+
+	for _, column := range svc.SasaranKejarBayiMap {
+		file.SetCellValue(sheetName, column.Label+rowAt, column.Name)
+	}
+
+	firstBodyCell := svc.SasaranKejarBayiMap["nama_anak"].Label + rowAt
+	lastBodyCell := svc.SasaranKejarBayiMap["status_idl_1"].Label + rowAt
+	file.SetCellStyle(sheetName, firstBodyCell, lastBodyCell, newFile.HeaderStyle)
+}
+
+func (svc *KejarBayiService) SetBody(newFile NewXlsxFile) {
+	file := newFile.ExcelizeFile
+	sheetName := newFile.SheetName
+	for i, sasaranKejarBayi := range svc.SasaranKejarBayiList {
+		rowAt := strconv.Itoa(i + newFile.StartBodyRowAt)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["nama_anak"].Label+rowAt, sasaranKejarBayi.NamaAnak)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["usia_anak"].Label+rowAt, sasaranKejarBayi.UsiaAnak)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["tanggal_lahir_anak"].Label+rowAt, sasaranKejarBayi.TanggalLahirAnak)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["jenis_kelamin_anak"].Label+rowAt, sasaranKejarBayi.JenisKelaminAnak)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["nama_orang_tua"].Label+rowAt, sasaranKejarBayi.NamaOrangTua)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["puskesmas"].Label+rowAt, sasaranKejarBayi.Puskesmas)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_hb0"].Label+rowAt, sasaranKejarBayi.HBO)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_bcg_1"].Label+rowAt, sasaranKejarBayi.BCG1)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_polio_1"].Label+rowAt, sasaranKejarBayi.POLIO1)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_polio_2"].Label+rowAt, sasaranKejarBayi.POLIO2)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_polio_3"].Label+rowAt, sasaranKejarBayi.POLIO3)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_polio_4"].Label+rowAt, sasaranKejarBayi.POLIO4)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_dpt_hb_hib_1"].Label+rowAt, sasaranKejarBayi.DPTHbHib1)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_dpt_hb_hib_2"].Label+rowAt, sasaranKejarBayi.DPTHbHib2)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_dpt_hb_hib_3"].Label+rowAt, sasaranKejarBayi.DPTHbHib3)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_ipv_1"].Label+rowAt, sasaranKejarBayi.IPV1)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_ipv_2"].Label+rowAt, sasaranKejarBayi.IPV2)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_rota_1"].Label+rowAt, sasaranKejarBayi.ROTA1)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_rota_2"].Label+rowAt, sasaranKejarBayi.ROTA2)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_rota_3"].Label+rowAt, sasaranKejarBayi.ROTA3)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_pcv_1"].Label+rowAt, sasaranKejarBayi.PCV1)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_pcv_2"].Label+rowAt, sasaranKejarBayi.PCV2)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_je_1"].Label+rowAt, sasaranKejarBayi.JE1)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_imunisasi_mr_1"].Label+rowAt, sasaranKejarBayi.MR1)
+		file.SetCellValue(sheetName, svc.SasaranKejarBayiMap["status_idl_1"].Label+rowAt, sasaranKejarBayi.IDL1)
+	}
+
+	firstBodyCell := svc.SasaranKejarBayiMap["nama_anak"].Label + strconv.Itoa(newFile.StartBodyRowAt)
+	lastBodyCell := svc.SasaranKejarBayiMap["status_idl_1"].Label + strconv.Itoa(len(svc.SasaranKejarBayiList)+newFile.HeaderRowAt)
+	file.SetCellStyle(sheetName, firstBodyCell, lastBodyCell, newFile.BodyStyle)
+
+}
+
+func (svc *KejarBayiService) SetColumnWidth(newFile NewXlsxFile) {
+	file := newFile.ExcelizeFile
+	sheetName := newFile.SheetName
+	for _, column := range svc.SasaranKejarBayiMap {
+		file.SetColWidth(sheetName, column.Label, column.Label, float64(column.Length))
+	}
+}
+
+type SasaranKejarBaduta struct {
+	NamaAnak         string `json:"namaAnak"`
+	UsiaAnak         string `json:"usiaAnak"`
+	TanggalLahirAnak string `json:"tanggalLahirAnak"`
+	JenisKelaminAnak string `json:"jenisKelaminAnak"`
+	NamaOrangTua     string `json:"namaOrangTua"`
+	Puskesmas        string `json:"puskesmas"`
+	DPTHbHib4        int    `json:"dptHbHib4"`
+	MR2              int    `json:"mr2"`
+	IBL1             int    `json:"ibl1"`
+	PCV3             int    `json:"pcv3"`
+}
+
+func (s *SasaranKejarBaduta) SetCellValue(code, cell string, sourceFile SourceXlsxFile) {
+	cellHandlers := map[string]func(){
+		"nama_anak":                     func() { s.NamaAnak = GetCellValue(sourceFile, cell) },
+		"tanggal_lahir_anak":            func() { s.TanggalLahirAnak = GetCellValue(sourceFile, cell) },
+		"jenis_kelamin_anak":            func() { s.JenisKelaminAnak = GetCellValue(sourceFile, cell) },
+		"nama_orang_tua":                func() { s.NamaOrangTua = GetCellValue(sourceFile, cell) },
+		"status_imunisasi_dpt_hb_hib_4": func() { s.DPTHbHib4 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_mr_2":         func() { s.MR2 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_ibl_1":                  func() { s.IBL1 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+		"status_imunisasi_pcv_3":        func() { s.PCV3 = GetStatusImunisasiKejar(GetCellValue(sourceFile, cell)) },
+	}
+
+	if handler, exists := cellHandlers[code]; exists {
+		handler()
+	}
+}
+
+func (s *SasaranKejarBaduta) CountImunisasiTidakIdeal() int {
+	imunisasiBadutaList := []int{
+		s.DPTHbHib4,
+		s.MR2,
+		s.IBL1,
+		s.PCV3,
+	}
+	return SumListInt(imunisasiBadutaList)
+}
+
+func (s *SasaranKejarBaduta) PopulateSasaranKejar(svc *KejarBadutaService, rowIndex int, sourceFile SourceXlsxFile) (bool, bool) {
+	isNoMoreRow, isImunisasiBayiValid := false, false
+
+	for _, column := range svc.DataImunisasiBadutaMap {
+		isNoMoreRow = CheckForEndOfFile(column, rowIndex, sourceFile)
+		if isNoMoreRow {
+			break
+		}
+
+		isImunisasiBayiValid = IsImunisasiValid(column, rowIndex, sourceFile)
+		if isImunisasiBayiValid {
+			s.SetCellValue(column.Code, column.Label+strconv.Itoa(rowIndex), sourceFile)
+		}
+	}
+
+	return isNoMoreRow, isImunisasiBayiValid
+}
+
+func (s *SasaranKejarBaduta) AppendIfValid(isImunisasiBayiValid bool, sasaranKejarBadutaList []SasaranKejarBaduta) []SasaranKejarBaduta {
+	if s.CountImunisasiTidakIdeal() != 0 && isImunisasiBayiValid {
+		s.Puskesmas = "WANASARI"
+		s.UsiaAnak = CalculateUsiaAnak(s.TanggalLahirAnak)
+		return append(sasaranKejarBadutaList, *s)
+	}
+
+	return sasaranKejarBadutaList
+}
+
+type KejarBadutaService struct {
+	DataImunisasiBadutaMap map[string]XlsxColumn
+	SasaranKejarBadutaMap  map[string]XlsxColumn
+	SasaranKejarBadutaList []SasaranKejarBaduta
+}
+
+func NewKejarBadutaService(config *Config) *KejarBadutaService {
+	return &KejarBadutaService{
+		DataImunisasiBadutaMap: PopulateXlsxColumnMap(config.ColumnDataImunaisasiBaduta),
+		SasaranKejarBadutaMap:  PopulateXlsxColumnMap(config.ColumnSasaranKejarBaduta),
+	}
+}
+
+func (svc *KejarBadutaService) GenerateFile(sourceFile SourceXlsxFile) (*XlsxGeneratedFile, error) {
+	var sasaranKejarBadutaList []SasaranKejarBaduta
+
+	rowIndex := 2
+	for {
+		sasaranKejarBaduta := SasaranKejarBaduta{}
+		isNoMoreRow, isImunisasiBayiValid := sasaranKejarBaduta.PopulateSasaranKejar(svc, rowIndex, sourceFile)
+
+		if isNoMoreRow {
+			break
+		}
+
+		sasaranKejarBadutaList = sasaranKejarBaduta.AppendIfValid(isImunisasiBayiValid, sasaranKejarBadutaList)
+
+		rowIndex++
+	}
+
+	SortSasaranKejarList(sasaranKejarBadutaList, func(s SasaranKejarBaduta) string {
+		return s.TanggalLahirAnak
+	})
+
+	svc.SasaranKejarBadutaList = sasaranKejarBadutaList
+
+	excelizeFile, err := CreateNewXlsxFile(svc)
 	if err != nil {
-		log.Printf("Error creating sheet for new filtered data asik bayi file: %v", err)
 		return nil, err
 	}
 
-	headers := []string{
-		headerNamaAnak, headerUsiaAnak, headerTanggalLahirAnak, headerJenisKelaminAnak,
-		headerNamaOrangTua, headerHBO, headerBCG1, headerPOLIO1, headerPOLIO2,
-		headerPOLIO3, headerPOLIO4, headerDPTHbHib1, headerDPTHbHib2,
-		headerDPTHbHib3, headerIPV1, headerIPV2, headerROTA1, headerROTA2,
-		headerROTA3, headerPCV1, headerPCV2, headerJE1, headerMR1, headerIDL1,
-	}
-	headersMap := make(map[string]string)
-
-	startHeaderRowNumAt := 3
-	startHeaderRowAt := strconv.Itoa(startHeaderRowNumAt)
-
-	headersLength := len(headers)
-	columnNameList := columnName(headersLength)
-	for i, columnName := range columnNameList {
-		headerCell := columnName + startHeaderRowAt
-		file.SetCellValue(sheetName, headerCell, headers[i])
-		headersMap[headers[i]] = columnName
-	}
-
-	headerStyle, err := setStyle(file, true)
-	if err == nil {
-		firstHeaderCell := headersMap[headerNamaAnak] + startHeaderRowAt
-		lastHeaderCell := headersMap[headerIDL1] + startHeaderRowAt
-		file.SetCellStyle(sheetName, firstHeaderCell, lastHeaderCell, headerStyle)
-	}
-
-	title := strings.Replace(getSasaranImunisasiKejarBayiFileName(), ".xlsx", "", 1)
-	titleStyle, err := file.NewStyle(
-		&excelize.Style{
-			Font: &excelize.Font{
-				Size:      22,
-				Bold:      true,
-				Color:     blackColor,
-				VertAlign: "center",
-			},
-			Alignment: &excelize.Alignment{
-				Horizontal: "center",
-			},
-		},
-	)
-	firstRow := strconv.Itoa(1)
-	file.SetCellValue(sheetName, headersMap[headerNamaAnak]+firstRow, title)
-	file.MergeCell(sheetName, headersMap[headerNamaAnak]+firstRow, headersMap[headerIDL1]+firstRow)
-	if err == nil {
-		file.SetCellStyle(sheetName, headersMap[headerNamaAnak]+"1", headersMap[headerIDL1]+firstRow, titleStyle)
-	}
-
-	sortByTanggalLahir(dataImunisasiBayiList)
-
-	startBodyRowNumAt := startHeaderRowNumAt + 1
-	sasaranImunisasiKejarBayiList := newSasaranImunisasiKejarBayiList(dataImunisasiBayiList)
-	for j, sasaranImunisasiKejarBayi := range sasaranImunisasiKejarBayiList {
-		rowAt := strconv.Itoa(j + startBodyRowNumAt)
-		file.SetCellValue(sheetName, headersMap[headerNamaAnak]+rowAt, sasaranImunisasiKejarBayi.NamaAnak)
-		file.SetCellValue(sheetName, headersMap[headerUsiaAnak]+rowAt, sasaranImunisasiKejarBayi.UsiaAnak)
-		file.SetCellValue(sheetName, headersMap[headerTanggalLahirAnak]+rowAt, sasaranImunisasiKejarBayi.TanggalLahirAnak)
-		file.SetCellValue(sheetName, headersMap[headerJenisKelaminAnak]+rowAt, sasaranImunisasiKejarBayi.JenisKelaminAnak)
-		file.SetCellValue(sheetName, headersMap[headerNamaOrangTua]+rowAt, sasaranImunisasiKejarBayi.NamaOrangTua)
-		file.SetCellValue(sheetName, headersMap[headerHBO]+rowAt, sasaranImunisasiKejarBayi.HBO)
-		file.SetCellValue(sheetName, headersMap[headerBCG1]+rowAt, sasaranImunisasiKejarBayi.BCG1)
-		file.SetCellValue(sheetName, headersMap[headerPOLIO1]+rowAt, sasaranImunisasiKejarBayi.POLIO1)
-		file.SetCellValue(sheetName, headersMap[headerPOLIO2]+rowAt, sasaranImunisasiKejarBayi.POLIO2)
-		file.SetCellValue(sheetName, headersMap[headerPOLIO3]+rowAt, sasaranImunisasiKejarBayi.POLIO3)
-		file.SetCellValue(sheetName, headersMap[headerPOLIO4]+rowAt, sasaranImunisasiKejarBayi.POLIO4)
-		file.SetCellValue(sheetName, headersMap[headerDPTHbHib1]+rowAt, sasaranImunisasiKejarBayi.DPTHbHib1)
-		file.SetCellValue(sheetName, headersMap[headerDPTHbHib2]+rowAt, sasaranImunisasiKejarBayi.DPTHbHib2)
-		file.SetCellValue(sheetName, headersMap[headerDPTHbHib3]+rowAt, sasaranImunisasiKejarBayi.DPTHbHib3)
-		file.SetCellValue(sheetName, headersMap[headerIPV1]+rowAt, sasaranImunisasiKejarBayi.IPV1)
-		file.SetCellValue(sheetName, headersMap[headerIPV2]+rowAt, sasaranImunisasiKejarBayi.IPV2)
-		file.SetCellValue(sheetName, headersMap[headerROTA1]+rowAt, sasaranImunisasiKejarBayi.ROTA1)
-		file.SetCellValue(sheetName, headersMap[headerROTA2]+rowAt, sasaranImunisasiKejarBayi.ROTA2)
-		file.SetCellValue(sheetName, headersMap[headerROTA3]+rowAt, sasaranImunisasiKejarBayi.ROTA3)
-		file.SetCellValue(sheetName, headersMap[headerPCV1]+rowAt, sasaranImunisasiKejarBayi.PCV1)
-		file.SetCellValue(sheetName, headersMap[headerPCV2]+rowAt, sasaranImunisasiKejarBayi.PCV2)
-		file.SetCellValue(sheetName, headersMap[headerJE1]+rowAt, sasaranImunisasiKejarBayi.JE1)
-		file.SetCellValue(sheetName, headersMap[headerMR1]+rowAt, sasaranImunisasiKejarBayi.MR1)
-		file.SetCellValue(sheetName, headersMap[headerIDL1]+rowAt, sasaranImunisasiKejarBayi.IDL1)
-	}
-
-	bodyStyle, err := setStyle(file, false)
-	if err == nil {
-		firstBodyCell := headersMap[headerNamaAnak] + strconv.Itoa(startBodyRowNumAt)
-		lastBodyCell := headersMap[headerIDL1] + strconv.Itoa(len(sasaranImunisasiKejarBayiList)+startHeaderRowNumAt)
-		file.SetCellStyle(sheetName, firstBodyCell, lastBodyCell, bodyStyle)
-	}
-
-	for header, width := range getSasaranImunisasiKejarBayiColumnWidth() {
-		file.SetColWidth(sheetName, headersMap[header], headersMap[header], width)
-	}
-
-	return file, nil
+	return &XlsxGeneratedFile{
+		FileName:     "Sasaran Imunisasi Kejar Baduta " + GetCurrentDateStr() + ".xlsx",
+		ExcelizeFile: excelizeFile,
+	}, nil
 }
 
-// getSasaranImunisasiKejarBayiColumnWidth returns column width for data kejar asik bayi
-func getSasaranImunisasiKejarBayiColumnWidth() map[string]float64 {
-	return map[string]float64{
-		headerNamaAnak:         47,
-		headerUsiaAnak:         15,
-		headerTanggalLahirAnak: 20,
-		headerJenisKelaminAnak: 20,
-		headerNamaOrangTua:     40,
-		headerHBO:              6,
-		headerBCG1:             8,
-		headerPOLIO1:           10,
-		headerPOLIO2:           10,
-		headerPOLIO3:           10,
-		headerPOLIO4:           10,
-		headerDPTHbHib1:        16,
-		headerDPTHbHib2:        16,
-		headerDPTHbHib3:        16,
-		headerIPV1:             8,
-		headerIPV2:             8,
-		headerROTA1:            10,
-		headerROTA2:            10,
-		headerROTA3:            10,
-		headerPCV1:             8,
-		headerPCV2:             8,
-		headerJE1:              8,
-		headerMR1:              6,
-		headerIDL1:             8,
+func (svc *KejarBadutaService) SetTitle(newFile NewXlsxFile) {
+	file := newFile.ExcelizeFile
+	sheetName := newFile.SheetName
+	rowAt := strconv.Itoa(newFile.TitleRowAt)
+	title := "Sasaran Imunisasi Kejar Baduta " + GetCurrentDateStr()
+
+	firstCell := svc.SasaranKejarBadutaMap["nama_anak"].Label + rowAt
+	lastCell := svc.SasaranKejarBadutaMap["status_imunisasi_pcv_3"].Label + rowAt
+
+	file.SetCellValue(sheetName, firstCell, title)
+	file.MergeCell(sheetName, firstCell, lastCell)
+	file.SetCellStyle(sheetName, firstCell, lastCell, newFile.TitleStyle)
+}
+
+func (svc *KejarBadutaService) SetHeader(newFile NewXlsxFile) {
+	file := newFile.ExcelizeFile
+	sheetName := newFile.SheetName
+	rowAt := strconv.Itoa(newFile.HeaderRowAt)
+
+	for _, column := range svc.SasaranKejarBadutaMap {
+		file.SetCellValue(sheetName, column.Label+rowAt, column.Name)
+	}
+
+	firstBodyCell := svc.SasaranKejarBadutaMap["nama_anak"].Label + rowAt
+	lastBodyCell := svc.SasaranKejarBadutaMap["status_imunisasi_pcv_3"].Label + rowAt
+	file.SetCellStyle(sheetName, firstBodyCell, lastBodyCell, newFile.HeaderStyle)
+}
+
+func (svc *KejarBadutaService) SetBody(newFile NewXlsxFile) {
+	file := newFile.ExcelizeFile
+	sheetName := newFile.SheetName
+	for i, sasaranKejarBaduta := range svc.SasaranKejarBadutaList {
+		rowAt := strconv.Itoa(i + newFile.StartBodyRowAt)
+		file.SetCellValue(sheetName, svc.SasaranKejarBadutaMap["nama_anak"].Label+rowAt, sasaranKejarBaduta.NamaAnak)
+		file.SetCellValue(sheetName, svc.SasaranKejarBadutaMap["usia_anak"].Label+rowAt, sasaranKejarBaduta.UsiaAnak)
+		file.SetCellValue(sheetName, svc.SasaranKejarBadutaMap["tanggal_lahir_anak"].Label+rowAt, sasaranKejarBaduta.TanggalLahirAnak)
+		file.SetCellValue(sheetName, svc.SasaranKejarBadutaMap["jenis_kelamin_anak"].Label+rowAt, sasaranKejarBaduta.JenisKelaminAnak)
+		file.SetCellValue(sheetName, svc.SasaranKejarBadutaMap["nama_orang_tua"].Label+rowAt, sasaranKejarBaduta.NamaOrangTua)
+		file.SetCellValue(sheetName, svc.SasaranKejarBadutaMap["puskesmas"].Label+rowAt, sasaranKejarBaduta.Puskesmas)
+		file.SetCellValue(sheetName, svc.SasaranKejarBadutaMap["status_imunisasi_dpt_hb_hib_4"].Label+rowAt, sasaranKejarBaduta.DPTHbHib4)
+		file.SetCellValue(sheetName, svc.SasaranKejarBadutaMap["status_imunisasi_mr_2"].Label+rowAt, sasaranKejarBaduta.MR2)
+		file.SetCellValue(sheetName, svc.SasaranKejarBadutaMap["status_ibl_1"].Label+rowAt, sasaranKejarBaduta.IBL1)
+		file.SetCellValue(sheetName, svc.SasaranKejarBadutaMap["status_imunisasi_pcv_3"].Label+rowAt, sasaranKejarBaduta.PCV3)
+	}
+
+	firstBodyCell := svc.SasaranKejarBadutaMap["nama_anak"].Label + strconv.Itoa(newFile.StartBodyRowAt)
+	lastBodyCell := svc.SasaranKejarBadutaMap["status_imunisasi_pcv_3"].Label + strconv.Itoa(len(svc.SasaranKejarBadutaList)+newFile.HeaderRowAt)
+	file.SetCellStyle(sheetName, firstBodyCell, lastBodyCell, newFile.BodyStyle)
+}
+
+func (svc *KejarBadutaService) SetColumnWidth(newFile NewXlsxFile) {
+	file := newFile.ExcelizeFile
+	sheetName := newFile.SheetName
+	for _, column := range svc.SasaranKejarBadutaMap {
+		file.SetColWidth(sheetName, column.Label, column.Label, float64(column.Length))
 	}
 }
 
-// sasaran imunisasi kejar bayi header const
-const (
-	headerNamaAnak         = "Nama Anak"
-	headerUsiaAnak         = "Usia Anak"
-	headerTanggalLahirAnak = "Tanggal Lahir Anak"
-	headerJenisKelaminAnak = "Jenis Kelamin Anak"
-	headerNamaOrangTua     = "Nama Orang Tua"
-	headerHBO              = "HBO"
-	headerBCG1             = "BCG 1"
-	headerPOLIO1           = "POLIO 1"
-	headerPOLIO2           = "POLIO 2"
-	headerPOLIO3           = "POLIO 3"
-	headerPOLIO4           = "POLIO 4"
-	headerDPTHbHib1        = "DPT-Hb-Hib 1"
-	headerDPTHbHib2        = "DPT-Hb-Hib 2"
-	headerDPTHbHib3        = "DPT-Hb-Hib 3"
-	headerIPV1             = "IPV 1"
-	headerIPV2             = "IPV 2"
-	headerROTA1            = "ROTA 1"
-	headerROTA2            = "ROTA 2"
-	headerROTA3            = "ROTA 3"
-	headerPCV1             = "PCV 1"
-	headerPCV2             = "PCV 2"
-	headerJE1              = "JE 1"
-	headerMR1              = "MR1"
-	headerIDL1             = "IDL1"
-)
+func CheckForEndOfFile(column XlsxColumn, rowIndex int, sourceFile SourceXlsxFile) bool {
+	return column.Code == "id" && GetCellValue(sourceFile, column.Label+strconv.Itoa(rowIndex)) == "-"
+}
+
+func PopulateXlsxColumnMap(columns []XlsxColumn) map[string]XlsxColumn {
+	columnMap := make(map[string]XlsxColumn, len(columns))
+	for _, col := range columns {
+		columnMap[col.Code] = col
+	}
+	return columnMap
+}
+
+func GetCellValue(sourceFile SourceXlsxFile, cell string) string {
+	cellValue, err := sourceFile.ExcelizeFile.GetCellValue(sourceFile.SheetName, cell)
+	if err != nil || cellValue == "" {
+		cellValue = "-"
+	}
+	return cellValue
+}
+
+func SumListInt(values []int) int {
+	total := 0
+	for _, value := range values {
+		total += value
+	}
+	return total
+}
+
+func CalculateUsiaAnak(tanggalLahirAnak string) string {
+	birthDate, err := time.Parse("2006-01-02", tanggalLahirAnak)
+	if err != nil {
+		log.Printf("Failed to parse tanggal lahir anak: %v", err)
+		return "-"
+	}
+
+	currentDate := time.Now()
+	months := currentDate.Year()*12 + int(currentDate.Month()) - (birthDate.Year()*12 + int(birthDate.Month()))
+	days := currentDate.Day() - birthDate.Day()
+
+	if days < 0 {
+		months--
+		days += time.Date(currentDate.Year(), currentDate.Month(), 0, 0, 0, 0, 0, currentDate.Location()).Day()
+	}
+
+	return fmt.Sprintf("%d Bulan %d Hari", months, days)
+}
+
+func IsImunisasiValid(column XlsxColumn, rowIndex int, sourceFile SourceXlsxFile) bool {
+	if !strings.Contains(column.Code, "_pemberi_imunisasi_") && !strings.Contains(column.Code, "pos_imunisasi_") {
+		return true
+	}
+
+	cellValue := strings.ToLower(GetCellValue(sourceFile, column.Label+strconv.Itoa(rowIndex)))
+
+	validValues := []string{"wanasari", "dalam gedung", "oleh sistem", "-"}
+	for _, valid := range validValues {
+		if strings.Contains(cellValue, valid) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func GetStatusImunisasiKejar(status string) int {
+	if status == "ideal" {
+		return 0
+	}
+	return 1
+}
+
+func SortSasaranKejarList[T any](list []T, dateExtractor func(T) string) {
+	sort.Slice(list, func(i, j int) bool {
+		dateFormat := "2006-01-02"
+		dateI, errI := time.Parse(dateFormat, dateExtractor(list[i]))
+		if errI != nil {
+			log.Printf("Error parsing date for index %d: %v", i, errI)
+			return false
+		}
+		dateJ, errJ := time.Parse(dateFormat, dateExtractor(list[j]))
+		if errJ != nil {
+			log.Printf("Error parsing date for index %d: %v", j, errJ)
+			return false
+		}
+		return dateI.Before(dateJ)
+	})
+}

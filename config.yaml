@@ -1,1002 +1,1003 @@
-column_data_imunisasi_bayi:
-  - code: id
-    index: 0
-    name: ID
-    label: A
-    length: 50
-  - code: nik_anak
-    index: 1
-    name: NIK Anak
-    label: B
-    length: 50
-  - code: nama_anak
-    index: 2
-    name: Nama Anak
-    label: C
-    length: 100
-  - code: tanggal_lahir_anak
-    index: 3
-    name: Tanggal Lahir Anak
-    label: D
-    length: 10
-  - code: jenis_kelamin_anak
-    index: 4
-    name: Jenis Kelamin Anak
-    label: E
-    length: 10
-  - code: nik_orang_tua
-    index: 5
-    name: NIK Orang Tua
-    label: F
-    length: 50
-  - code: nama_orang_tua
-    index: 6
-    name: Nama Orang Tua
-    label: G
-    length: 100
-  - code: provinsi
-    index: 7
-    name: Provinsi
-    label: H
-    length: 50
-  - code: kabupaten_kota
-    index: 8
-    name: Kabupaten atau Kota
-    label: I
-    length: 50
-  - code: kecamatan
-    index: 9
-    name: Kecamatan
-    label: J
-    length: 50
-  - code: kelurahan_desa
-    index: 10
-    name: Kelurahan atau Desa
-    label: K
-    length: 50
-  - code: kode_puskesmas
-    index: 11
-    name: Kode Puskesmas
-    label: L
-    length: 20
-  - code: puskesmas
-    index: 12
-    name: Puskesmas
-    label: M
-    length: 100
-  - code: tanggal_imunisasi_hb0
-    index: 13
-    name: Tanggal Imunisasi HB0
-    label: N
-    length: 10
-  - code: tanggal_input_hb0
-    index: 14
-    name: Tanggal Input HB0
-    label: O
-    length: 10
-  - code: pos_imunisasi_hb0
-    index: 15
-    name: Pos Imunisasi HB0
-    label: P
-    length: 50
-  - code: pkm_pemberi_imunisasi_hb0
-    index: 16
-    name: PKM Pemberi Imunisasi HB0
-    label: Q
-    length: 50
-  - code: status_imunisasi_hb0
-    index: 17
-    name: Status Imunisasi HB0
-    label: R
-    length: 50
-  - code: sumber_pencatatan_imunisasi_hb0
-    index: 18
-    name: Sumber Pencatatan Imunisasi HB0
-    label: S
-    length: 50
-  - code: tanggal_imunisasi_bcg_1
-    index: 19
-    name: Tanggal Imunisasi BCG 1
-    label: T
-    length: 10
-  - code: tanggal_input_bcg_1
-    index: 20
-    name: Tanggal Input BCG 1
-    label: U
-    length: 10
-  - code: pos_imunisasi_bcg_1
-    index: 21
-    name: Pos Imunisasi BCG 1
-    label: V
-    length: 50
-  - code: pkm_pemberi_imunisasi_bcg_1
-    index: 22
-    name: PKM Pemberi Imunisasi BCG 1
-    label: W
-    length: 50
-  - code: status_imunisasi_bcg_1
-    index: 23
-    name: Status Imunisasi BCG 1
-    label: X
-    length: 50
-  - code: sumber_pencatatan_imunisasi_bcg_1
-    index: 24
-    name: Sumber Pencatatan Imunisasi BCG 1
-    label: Y
-    length: 50
-  - code: tanggal_imunisasi_polio_1
-    index: 25
-    name: Tanggal Imunisasi POLIO 1
-    label: Z
-    length: 10
-  - code: tanggal_input_polio_1
-    index: 26
-    name: Tanggal Input POLIO 1
-    label: AA
-    length: 10
-  - code: pos_imunisasi_polio_1
-    index: 27
-    name: Pos Imunisasi POLIO 1
-    label: AB
-    length: 50
-  - code: pkm_pemberi_imunisasi_polio_1
-    index: 28
-    name: PKM Pemberi Imunisasi POLIO 1
-    label: AC
-    length: 50
-  - code: status_imunisasi_polio_1
-    index: 29
-    name: Status Imunisasi POLIO 1
-    label: AD
-    length: 50
-  - code: sumber_pencatatan_imunisasi_polio_1
-    index: 30
-    name: Sumber Pencatatan Imunisasi POLIO 1
-    label: AE
-    length: 50
-  - code: tanggal_imunisasi_polio_2
-    index: 31
-    name: Tanggal Imunisasi POLIO 2
-    label: AF
-    length: 10
-  - code: tanggal_input_polio_2
-    index: 32
-    name: Tanggal Input POLIO 2
-    label: AG
-    length: 10
-  - code: pos_imunisasi_polio_2
-    index: 33
-    name: Pos Imunisasi POLIO 2
-    label: AH
-    length: 50
-  - code: pkm_pemberi_imunisasi_polio_2
-    index: 34
-    name: PKM Pemberi Imunisasi POLIO 2
-    label: AI
-    length: 50
-  - code: status_imunisasi_polio_2
-    index: 35
-    name: Status Imunisasi POLIO 2
-    label: AJ
-    length: 50
-  - code: sumber_pencatatan_imunisasi_polio_2
-    index: 36
-    name: Sumber Pencatatan Imunisasi POLIO 2
-    label: AK
-    length: 50
-  - code: tanggal_imunisasi_polio_3
-    index: 37
-    name: Tanggal Imunisasi POLIO 3
-    label: AL
-    length: 10
-  - code: tanggal_input_polio_3
-    index: 38
-    name: Tanggal Input POLIO 3
-    label: AM
-    length: 10
-  - code: pos_imunisasi_polio_3
-    index: 39
-    name: Pos Imunisasi POLIO 3
-    label: AN
-    length: 50
-  - code: pkm_pemberi_imunisasi_polio_3
-    index: 40
-    name: PKM Pemberi Imunisasi POLIO 3
-    label: AO
-    length: 50
-  - code: status_imunisasi_polio_3
-    index: 41
-    name: Status Imunisasi POLIO 3
-    label: AP
-    length: 50
-  - code: sumber_pencatatan_imunisasi_polio_3
-    index: 42
-    name: Sumber Pencatatan Imunisasi POLIO 3
-    label: AQ
-    length: 50
-  - code: tanggal_imunisasi_polio_4
-    index: 43
-    name: Tanggal Imunisasi POLIO 4
-    label: AR
-    length: 10
-  - code: tanggal_input_polio_4
-    index: 44
-    name: Tanggal Input POLIO 4
-    label: AS
-    length: 10
-  - code: pos_imunisasi_polio_4
-    index: 45
-    name: Pos Imunisasi POLIO 4
-    label: AT
-    length: 50
-  - code: pkm_pemberi_imunisasi_polio_4
-    index: 46
-    name: PKM Pemberi Imunisasi POLIO 4
-    label: AU
-    length: 50
-  - code: status_imunisasi_polio_4
-    index: 47
-    name: Status Imunisasi POLIO 4
-    label: AV
-    length: 50
-  - code: sumber_pencatatan_imunisasi_polio_4
-    index: 48
-    name: Sumber Pencatatan Imunisasi POLIO 4
-    label: AW
-    length: 50
-  - code: tanggal_imunisasi_dpt_hb_hib_1
-    index: 49
-    name: Tanggal Imunisasi DPT-Hb-Hib 1
-    label: AX
-    length: 10
-  - code: tanggal_input_dpt_hb_hib_1
-    index: 50
-    name: Tanggal Input DPT-Hb-Hib 1
-    label: AY
-    length: 10
-  - code: pos_imunisasi_dpt_hb_hib_1
-    index: 51
-    name: Pos Imunisasi DPT-Hb-Hib 1
-    label: AZ
-    length: 50
-  - code: pkm_pemberi_imunisasi_dpt_hb_hib_1
-    index: 52
-    name: PKM Pemberi Imunisasi DPT-Hb-Hib 1
-    label: BA
-    length: 50
-  - code: status_imunisasi_dpt_hb_hib_1
-    index: 53
-    name: Status Imunisasi DPT-Hb-Hib 1
-    label: BB
-    length: 50
-  - code: sumber_pencatatan_imunisasi_dpt_hb_hib_1
-    index: 54
-    name: Sumber Pencatatan Imunisasi DPT-Hb-Hib 1
-    label: BC
-    length: 50
-  - code: tanggal_imunisasi_dpt_hb_hib_2
-    index: 55
-    name: Tanggal Imunisasi DPT-Hb-Hib 2
-    label: BD
-    length: 10
-  - code: tanggal_input_dpt_hb_hib_2
-    index: 56
-    name: Tanggal Input DPT-Hb-Hib 2
-    label: BE
-    length: 10
-  - code: pos_imunisasi_dpt_hb_hib_2
-    index: 57
-    name: Pos Imunisasi DPT-Hb-Hib 2
-    label: BF
-    length: 50
-  - code: pkm_pemberi_imunisasi_dpt_hb_hib_2
-    index: 58
-    name: PKM Pemberi Imunisasi DPT-Hb-Hib 2
-    label: BG
-    length: 50
-  - code: status_imunisasi_dpt_hb_hib_2
-    index: 59
-    name: Status Imunisasi DPT-Hb-Hib 2
-    label: BH
-    length: 50
-  - code: sumber_pencatatan_imunisasi_dpt_hb_hib_2
-    index: 60
-    name: Sumber Pencatatan Imunisasi DPT-Hb-Hib 2
-    label: BI
-    length: 50
-  - code: tanggal_imunisasi_dpt_hb_hib_3
-    index: 61
-    name: Tanggal Imunisasi DPT-Hb-Hib 3
-    label: BJ
-    length: 10
-  - code: tanggal_input_dpt_hb_hib_3
-    index: 62
-    name: Tanggal Input DPT-Hb-Hib 3
-    label: BK
-    length: 10
-  - code: pos_imunisasi_dpt_hb_hib_3
-    index: 63
-    name: Pos Imunisasi DPT-Hb-Hib 3
-    label: BL
-    length: 50
-  - code: pkm_pemberi_imunisasi_dpt_hb_hib_3
-    index: 64
-    name: PKM Pemberi Imunisasi DPT-Hb-Hib 3
-    label: BM
-    length: 50
-  - code: status_imunisasi_dpt_hb_hib_3
-    index: 65
-    name: Status Imunisasi DPT-Hb-Hib 3
-    label: BN
-    length: 50
-  - code: sumber_pencatatan_imunisasi_dpt_hb_hib_3
-    index: 66
-    name: Sumber Pencatatan Imunisasi DPT-Hb-Hib 3
-    label: BO
-    length: 50
-  - code: tanggal_imunisasi_ipv_1
-    index: 67
-    name: Tanggal Imunisasi IPV 1
-    label: BP
-    length: 10
-  - code: tanggal_input_ipv_1
-    index: 68
-    name: Tanggal Input IPV 1
-    label: BQ
-    length: 10
-  - code: pos_imunisasi_ipv_1
-    index: 69
-    name: Pos Imunisasi IPV 1
-    label: BR
-    length: 50
-  - code: pkm_pemberi_imunisasi_ipv_1
-    index: 70
-    name: PKM Pemberi Imunisasi IPV 1
-    label: BS
-    length: 50
-  - code: status_imunisasi_ipv_1
-    index: 71
-    name: Status Imunisasi IPV 1
-    label: BT
-    length: 50
-  - code: sumber_pencatatan_imunisasi_ipv_1
-    index: 72
-    name: Sumber Pencatatan Imunisasi IPV 1
-    label: BU
-    length: 50
-  - code: tanggal_imunisasi_ipv_2
-    index: 73
-    name: Tanggal Imunisasi IPV 2
-    label: BV
-    length: 10
-  - code: tanggal_input_ipv_2
-    index: 74
-    name: Tanggal Input IPV 2
-    label: BW
-    length: 10
-  - code: pos_imunisasi_ipv_2
-    index: 75
-    name: Pos Imunisasi IPV 2
-    label: BX
-    length: 50
-  - code: pkm_pemberi_imunisasi_ipv_2
-    index: 76
-    name: PKM Pemberi Imunisasi IPV 2
-    label: BY
-    length: 50
-  - code: status_imunisasi_ipv_2
-    index: 77
-    name: Status Imunisasi IPV 2
-    label: BZ
-    length: 50
-  - code: sumber_pencatatan_imunisasi_ipv_2
-    index: 78
-    name: Sumber Pencatatan Imunisasi IPV 2
-    label: CA
-    length: 50
-  - code: tanggal_imunisasi_rota_1
-    index: 79
-    name: Tanggal Imunisasi ROTA 1
-    label: CB
-    length: 10
-  - code: tanggal_input_rota_1
-    index: 80
-    name: Tanggal Input ROTA 1
-    label: CC
-    length: 10
-  - code: pos_imunisasi_rota_1
-    index: 81
-    name: Pos Imunisasi ROTA 1
-    label: CD
-    length: 50
-  - code: pkm_pemberi_imunisasi_rota_1
-    index: 82
-    name: PKM Pemberi Imunisasi ROTA 1
-    label: CE
-    length: 50
-  - code: status_imunisasi_rota_1
-    index: 83
-    name: Status Imunisasi ROTA 1
-    label: CF
-    length: 50
-  - code: sumber_pencatatan_imunisasi_rota_1
-    index: 84
-    name: Sumber Pencatatan Imunisasi ROTA 1
-    label: CG
-    length: 50
-  - code: tanggal_imunisasi_rota_2
-    index: 85
-    name: Tanggal Imunisasi ROTA 2
-    label: CH
-    length: 10
-  - code: tanggal_input_rota_2
-    index: 86
-    name: Tanggal Input ROTA 2
-    label: CI
-    length: 10
-  - code: pos_imunisasi_rota_2
-    index: 87
-    name: Pos Imunisasi ROTA 2
-    label: CJ
-    length: 50
-  - code: pkm_pemberi_imunisasi_rota_2
-    index: 88
-    name: PKM Pemberi Imunisasi ROTA 2
-    label: CK
-    length: 50
-  - code: status_imunisasi_rota_2
-    index: 89
-    name: Status Imunisasi ROTA 2
-    label: CL
-    length: 50
-  - code: sumber_pencatatan_imunisasi_rota_2
-    index: 90
-    name: Sumber Pencatatan Imunisasi ROTA 2
-    label: CM
-    length: 50
-  - code: tanggal_imunisasi_rota_3
-    index: 91
-    name: Tanggal Imunisasi ROTA 3
-    label: CN
-    length: 10
-  - code: tanggal_input_rota_3
-    index: 92
-    name: Tanggal Input ROTA 3
-    label: CO
-    length: 10
-  - code: pos_imunisasi_rota_3
-    index: 93
-    name: Pos Imunisasi ROTA 3
-    label: CP
-    length: 50
-  - code: pkm_pemberi_imunisasi_rota_3
-    index: 94
-    name: PKM Pemberi Imunisasi ROTA 3
-    label: CQ
-    length: 50
-  - code: status_imunisasi_rota_3
-    index: 95
-    name: Status Imunisasi ROTA 3
-    label: CR
-    length: 50
-  - code: sumber_pencatatan_imunisasi_rota_3
-    index: 96
-    name: Sumber Pencatatan Imunisasi ROTA 3
-    label: CS
-    length: 50
-  - code: tanggal_imunisasi_pcv_1
-    index: 97
-    name: Tanggal Imunisasi PCV 1
-    label: CT
-    length: 10
-  - code: tanggal_input_pcv_1
-    index: 98
-    name: Tanggal Input PCV 1
-    label: CU
-    length: 10
-  - code: pos_imunisasi_pcv_1
-    index: 99
-    name: Pos Imunisasi PCV 1
-    label: CV
-    length: 50
-  - code: pkm_pemberi_imunisasi_pcv_1
-    index: 100
-    name: PKM Pemberi Imunisasi PCV 1
-    label: CW
-    length: 50
-  - code: status_imunisasi_pcv_1
-    index: 101
-    name: Status Imunisasi PCV 1
-    label: CX
-    length: 50
-  - code: sumber_pencatatan_imunisasi_pcv_1
-    index: 102
-    name: Sumber Pencatatan Imunisasi PCV 1
-    label: CY
-    length: 50
-  - code: tanggal_imunisasi_pcv_2
-    index: 103
-    name: Tanggal Imunisasi PCV 2
-    label: CZ
-    length: 10
-  - code: tanggal_input_pcv_2
-    index: 104
-    name: Tanggal Input PCV 2
-    label: DA
-    length: 10
-  - code: pos_imunisasi_pcv_2
-    index: 105
-    name: Pos Imunisasi PCV 2
-    label: DB
-    length: 50
-  - code: pkm_pemberi_imunisasi_pcv_2
-    index: 106
-    name: PKM Pemberi Imunisasi PCV 2
-    label: DC
-    length: 50
-  - code: status_imunisasi_pcv_2
-    index: 107
-    name: Status Imunisasi PCV 2
-    label: DD
-    length: 50
-  - code: sumber_pencatatan_imunisasi_pcv_2
-    index: 108
-    name: Sumber Pencatatan Imunisasi PCV 2
-    label: DE
-    length: 50
-  - code: tanggal_imunisasi_je_1
-    index: 109
-    name: Tanggal Imunisasi JE 1
-    label: DF
-    length: 10
-  - code: tanggal_input_je_1
-    index: 110
-    name: Tanggal Input JE 1
-    label: DG
-    length: 10
-  - code: pos_imunisasi_je_1
-    index: 111
-    name: Pos Imunisasi JE 1
-    label: DH
-    length: 50
-  - code: pkm_pemberi_imunisasi_je_1
-    index: 112
-    name: PKM Pemberi Imunisasi JE 1
-    label: DI
-    length: 50
-  - code: status_imunisasi_je_1
-    index: 113
-    name: Status Imunisasi JE 1
-    label: DJ
-    length: 50
-  - code: sumber_pencatatan_imunisasi_je_1
-    index: 114
-    name: Sumber Pencatatan Imunisasi JE 1
-    label: DK
-    length: 50
-  - code: tanggal_imunisasi_mr_1
-    index: 115
-    name: Tanggal Imunisasi MR 1
-    label: DL
-    length: 10
-  - code: tanggal_input_mr_1
-    index: 116
-    name: Tanggal Input MR 1
-    label: DM
-    length: 10
-  - code: pos_imunisasi_mr_1
-    index: 117
-    name: Pos Imunisasi MR 1
-    label: DN
-    length: 50
-  - code: pkm_pemberi_imunisasi_mr_1
-    index: 118
-    name: PKM Pemberi Imunisasi MR 1
-    label: DO
-    length: 50
-  - code: status_imunisasi_mr_1
-    index: 119
-    name: Status Imunisasi MR 1
-    label: DP
-    length: 50
-  - code: sumber_pencatatan_imunisasi_mr_1
-    index: 120
-    name: Sumber Pencatatan Imunisasi MR 1
-    label: DQ
-    length: 50
-  - code: tanggal_idl_1
-    index: 121
-    name: Tanggal IDL 1
-    label: DR
-    length: 10
-  - code: tanggal_input_idl_1
-    index: 122
-    name: Tanggal Input IDL 1
-    label: DS
-    length: 10
-  - code: pos_idl_1
-    index: 123
-    name: Pos IDL 1
-    label: DT
-    length: 50
-  - code: pkm_pembentuk_idl_1
-    index: 124
-    name: PKM Pembentuk IDL 1
-    label: DU
-    length: 50
-  - code: status_idl_1
-    index: 125
-    name: Status IDL 1
-    label: DV
-    length: 50
-  - code: sumber_pencatatan_idl_1
-    index: 126
-    name: Sumber Pencatatan IDL 1
-    label: DW
-    length: 50
+kejar_config:
+    column_data_imunisasi_bayi:
+      - code: id
+        index: 0
+        name: ID
+        label: A
+        length: 50
+      - code: nik_anak
+        index: 1
+        name: NIK Anak
+        label: B
+        length: 50
+      - code: nama_anak
+        index: 2
+        name: Nama Anak
+        label: C
+        length: 100
+      - code: tanggal_lahir_anak
+        index: 3
+        name: Tanggal Lahir Anak
+        label: D
+        length: 10
+      - code: jenis_kelamin_anak
+        index: 4
+        name: Jenis Kelamin Anak
+        label: E
+        length: 10
+      - code: nik_orang_tua
+        index: 5
+        name: NIK Orang Tua
+        label: F
+        length: 50
+      - code: nama_orang_tua
+        index: 6
+        name: Nama Orang Tua
+        label: G
+        length: 100
+      - code: provinsi
+        index: 7
+        name: Provinsi
+        label: H
+        length: 50
+      - code: kabupaten_kota
+        index: 8
+        name: Kabupaten atau Kota
+        label: I
+        length: 50
+      - code: kecamatan
+        index: 9
+        name: Kecamatan
+        label: J
+        length: 50
+      - code: kelurahan_desa
+        index: 10
+        name: Kelurahan atau Desa
+        label: K
+        length: 50
+      - code: kode_puskesmas
+        index: 11
+        name: Kode Puskesmas
+        label: L
+        length: 20
+      - code: puskesmas
+        index: 12
+        name: Puskesmas
+        label: M
+        length: 100
+      - code: tanggal_imunisasi_hb0
+        index: 13
+        name: Tanggal Imunisasi HB0
+        label: N
+        length: 10
+      - code: tanggal_input_hb0
+        index: 14
+        name: Tanggal Input HB0
+        label: O
+        length: 10
+      - code: pos_imunisasi_hb0
+        index: 15
+        name: Pos Imunisasi HB0
+        label: P
+        length: 50
+      - code: pkm_pemberi_imunisasi_hb0
+        index: 16
+        name: PKM Pemberi Imunisasi HB0
+        label: Q
+        length: 50
+      - code: status_imunisasi_hb0
+        index: 17
+        name: Status Imunisasi HB0
+        label: R
+        length: 50
+      - code: sumber_pencatatan_imunisasi_hb0
+        index: 18
+        name: Sumber Pencatatan Imunisasi HB0
+        label: S
+        length: 50
+      - code: tanggal_imunisasi_bcg_1
+        index: 19
+        name: Tanggal Imunisasi BCG 1
+        label: T
+        length: 10
+      - code: tanggal_input_bcg_1
+        index: 20
+        name: Tanggal Input BCG 1
+        label: U
+        length: 10
+      - code: pos_imunisasi_bcg_1
+        index: 21
+        name: Pos Imunisasi BCG 1
+        label: V
+        length: 50
+      - code: pkm_pemberi_imunisasi_bcg_1
+        index: 22
+        name: PKM Pemberi Imunisasi BCG 1
+        label: W
+        length: 50
+      - code: status_imunisasi_bcg_1
+        index: 23
+        name: Status Imunisasi BCG 1
+        label: X
+        length: 50
+      - code: sumber_pencatatan_imunisasi_bcg_1
+        index: 24
+        name: Sumber Pencatatan Imunisasi BCG 1
+        label: Y
+        length: 50
+      - code: tanggal_imunisasi_polio_1
+        index: 25
+        name: Tanggal Imunisasi POLIO 1
+        label: Z
+        length: 10
+      - code: tanggal_input_polio_1
+        index: 26
+        name: Tanggal Input POLIO 1
+        label: AA
+        length: 10
+      - code: pos_imunisasi_polio_1
+        index: 27
+        name: Pos Imunisasi POLIO 1
+        label: AB
+        length: 50
+      - code: pkm_pemberi_imunisasi_polio_1
+        index: 28
+        name: PKM Pemberi Imunisasi POLIO 1
+        label: AC
+        length: 50
+      - code: status_imunisasi_polio_1
+        index: 29
+        name: Status Imunisasi POLIO 1
+        label: AD
+        length: 50
+      - code: sumber_pencatatan_imunisasi_polio_1
+        index: 30
+        name: Sumber Pencatatan Imunisasi POLIO 1
+        label: AE
+        length: 50
+      - code: tanggal_imunisasi_polio_2
+        index: 31
+        name: Tanggal Imunisasi POLIO 2
+        label: AF
+        length: 10
+      - code: tanggal_input_polio_2
+        index: 32
+        name: Tanggal Input POLIO 2
+        label: AG
+        length: 10
+      - code: pos_imunisasi_polio_2
+        index: 33
+        name: Pos Imunisasi POLIO 2
+        label: AH
+        length: 50
+      - code: pkm_pemberi_imunisasi_polio_2
+        index: 34
+        name: PKM Pemberi Imunisasi POLIO 2
+        label: AI
+        length: 50
+      - code: status_imunisasi_polio_2
+        index: 35
+        name: Status Imunisasi POLIO 2
+        label: AJ
+        length: 50
+      - code: sumber_pencatatan_imunisasi_polio_2
+        index: 36
+        name: Sumber Pencatatan Imunisasi POLIO 2
+        label: AK
+        length: 50
+      - code: tanggal_imunisasi_polio_3
+        index: 37
+        name: Tanggal Imunisasi POLIO 3
+        label: AL
+        length: 10
+      - code: tanggal_input_polio_3
+        index: 38
+        name: Tanggal Input POLIO 3
+        label: AM
+        length: 10
+      - code: pos_imunisasi_polio_3
+        index: 39
+        name: Pos Imunisasi POLIO 3
+        label: AN
+        length: 50
+      - code: pkm_pemberi_imunisasi_polio_3
+        index: 40
+        name: PKM Pemberi Imunisasi POLIO 3
+        label: AO
+        length: 50
+      - code: status_imunisasi_polio_3
+        index: 41
+        name: Status Imunisasi POLIO 3
+        label: AP
+        length: 50
+      - code: sumber_pencatatan_imunisasi_polio_3
+        index: 42
+        name: Sumber Pencatatan Imunisasi POLIO 3
+        label: AQ
+        length: 50
+      - code: tanggal_imunisasi_polio_4
+        index: 43
+        name: Tanggal Imunisasi POLIO 4
+        label: AR
+        length: 10
+      - code: tanggal_input_polio_4
+        index: 44
+        name: Tanggal Input POLIO 4
+        label: AS
+        length: 10
+      - code: pos_imunisasi_polio_4
+        index: 45
+        name: Pos Imunisasi POLIO 4
+        label: AT
+        length: 50
+      - code: pkm_pemberi_imunisasi_polio_4
+        index: 46
+        name: PKM Pemberi Imunisasi POLIO 4
+        label: AU
+        length: 50
+      - code: status_imunisasi_polio_4
+        index: 47
+        name: Status Imunisasi POLIO 4
+        label: AV
+        length: 50
+      - code: sumber_pencatatan_imunisasi_polio_4
+        index: 48
+        name: Sumber Pencatatan Imunisasi POLIO 4
+        label: AW
+        length: 50
+      - code: tanggal_imunisasi_dpt_hb_hib_1
+        index: 49
+        name: Tanggal Imunisasi DPT-Hb-Hib 1
+        label: AX
+        length: 10
+      - code: tanggal_input_dpt_hb_hib_1
+        index: 50
+        name: Tanggal Input DPT-Hb-Hib 1
+        label: AY
+        length: 10
+      - code: pos_imunisasi_dpt_hb_hib_1
+        index: 51
+        name: Pos Imunisasi DPT-Hb-Hib 1
+        label: AZ
+        length: 50
+      - code: pkm_pemberi_imunisasi_dpt_hb_hib_1
+        index: 52
+        name: PKM Pemberi Imunisasi DPT-Hb-Hib 1
+        label: BA
+        length: 50
+      - code: status_imunisasi_dpt_hb_hib_1
+        index: 53
+        name: Status Imunisasi DPT-Hb-Hib 1
+        label: BB
+        length: 50
+      - code: sumber_pencatatan_imunisasi_dpt_hb_hib_1
+        index: 54
+        name: Sumber Pencatatan Imunisasi DPT-Hb-Hib 1
+        label: BC
+        length: 50
+      - code: tanggal_imunisasi_dpt_hb_hib_2
+        index: 55
+        name: Tanggal Imunisasi DPT-Hb-Hib 2
+        label: BD
+        length: 10
+      - code: tanggal_input_dpt_hb_hib_2
+        index: 56
+        name: Tanggal Input DPT-Hb-Hib 2
+        label: BE
+        length: 10
+      - code: pos_imunisasi_dpt_hb_hib_2
+        index: 57
+        name: Pos Imunisasi DPT-Hb-Hib 2
+        label: BF
+        length: 50
+      - code: pkm_pemberi_imunisasi_dpt_hb_hib_2
+        index: 58
+        name: PKM Pemberi Imunisasi DPT-Hb-Hib 2
+        label: BG
+        length: 50
+      - code: status_imunisasi_dpt_hb_hib_2
+        index: 59
+        name: Status Imunisasi DPT-Hb-Hib 2
+        label: BH
+        length: 50
+      - code: sumber_pencatatan_imunisasi_dpt_hb_hib_2
+        index: 60
+        name: Sumber Pencatatan Imunisasi DPT-Hb-Hib 2
+        label: BI
+        length: 50
+      - code: tanggal_imunisasi_dpt_hb_hib_3
+        index: 61
+        name: Tanggal Imunisasi DPT-Hb-Hib 3
+        label: BJ
+        length: 10
+      - code: tanggal_input_dpt_hb_hib_3
+        index: 62
+        name: Tanggal Input DPT-Hb-Hib 3
+        label: BK
+        length: 10
+      - code: pos_imunisasi_dpt_hb_hib_3
+        index: 63
+        name: Pos Imunisasi DPT-Hb-Hib 3
+        label: BL
+        length: 50
+      - code: pkm_pemberi_imunisasi_dpt_hb_hib_3
+        index: 64
+        name: PKM Pemberi Imunisasi DPT-Hb-Hib 3
+        label: BM
+        length: 50
+      - code: status_imunisasi_dpt_hb_hib_3
+        index: 65
+        name: Status Imunisasi DPT-Hb-Hib 3
+        label: BN
+        length: 50
+      - code: sumber_pencatatan_imunisasi_dpt_hb_hib_3
+        index: 66
+        name: Sumber Pencatatan Imunisasi DPT-Hb-Hib 3
+        label: BO
+        length: 50
+      - code: tanggal_imunisasi_ipv_1
+        index: 67
+        name: Tanggal Imunisasi IPV 1
+        label: BP
+        length: 10
+      - code: tanggal_input_ipv_1
+        index: 68
+        name: Tanggal Input IPV 1
+        label: BQ
+        length: 10
+      - code: pos_imunisasi_ipv_1
+        index: 69
+        name: Pos Imunisasi IPV 1
+        label: BR
+        length: 50
+      - code: pkm_pemberi_imunisasi_ipv_1
+        index: 70
+        name: PKM Pemberi Imunisasi IPV 1
+        label: BS
+        length: 50
+      - code: status_imunisasi_ipv_1
+        index: 71
+        name: Status Imunisasi IPV 1
+        label: BT
+        length: 50
+      - code: sumber_pencatatan_imunisasi_ipv_1
+        index: 72
+        name: Sumber Pencatatan Imunisasi IPV 1
+        label: BU
+        length: 50
+      - code: tanggal_imunisasi_ipv_2
+        index: 73
+        name: Tanggal Imunisasi IPV 2
+        label: BV
+        length: 10
+      - code: tanggal_input_ipv_2
+        index: 74
+        name: Tanggal Input IPV 2
+        label: BW
+        length: 10
+      - code: pos_imunisasi_ipv_2
+        index: 75
+        name: Pos Imunisasi IPV 2
+        label: BX
+        length: 50
+      - code: pkm_pemberi_imunisasi_ipv_2
+        index: 76
+        name: PKM Pemberi Imunisasi IPV 2
+        label: BY
+        length: 50
+      - code: status_imunisasi_ipv_2
+        index: 77
+        name: Status Imunisasi IPV 2
+        label: BZ
+        length: 50
+      - code: sumber_pencatatan_imunisasi_ipv_2
+        index: 78
+        name: Sumber Pencatatan Imunisasi IPV 2
+        label: CA
+        length: 50
+      - code: tanggal_imunisasi_rota_1
+        index: 79
+        name: Tanggal Imunisasi ROTA 1
+        label: CB
+        length: 10
+      - code: tanggal_input_rota_1
+        index: 80
+        name: Tanggal Input ROTA 1
+        label: CC
+        length: 10
+      - code: pos_imunisasi_rota_1
+        index: 81
+        name: Pos Imunisasi ROTA 1
+        label: CD
+        length: 50
+      - code: pkm_pemberi_imunisasi_rota_1
+        index: 82
+        name: PKM Pemberi Imunisasi ROTA 1
+        label: CE
+        length: 50
+      - code: status_imunisasi_rota_1
+        index: 83
+        name: Status Imunisasi ROTA 1
+        label: CF
+        length: 50
+      - code: sumber_pencatatan_imunisasi_rota_1
+        index: 84
+        name: Sumber Pencatatan Imunisasi ROTA 1
+        label: CG
+        length: 50
+      - code: tanggal_imunisasi_rota_2
+        index: 85
+        name: Tanggal Imunisasi ROTA 2
+        label: CH
+        length: 10
+      - code: tanggal_input_rota_2
+        index: 86
+        name: Tanggal Input ROTA 2
+        label: CI
+        length: 10
+      - code: pos_imunisasi_rota_2
+        index: 87
+        name: Pos Imunisasi ROTA 2
+        label: CJ
+        length: 50
+      - code: pkm_pemberi_imunisasi_rota_2
+        index: 88
+        name: PKM Pemberi Imunisasi ROTA 2
+        label: CK
+        length: 50
+      - code: status_imunisasi_rota_2
+        index: 89
+        name: Status Imunisasi ROTA 2
+        label: CL
+        length: 50
+      - code: sumber_pencatatan_imunisasi_rota_2
+        index: 90
+        name: Sumber Pencatatan Imunisasi ROTA 2
+        label: CM
+        length: 50
+      - code: tanggal_imunisasi_rota_3
+        index: 91
+        name: Tanggal Imunisasi ROTA 3
+        label: CN
+        length: 10
+      - code: tanggal_input_rota_3
+        index: 92
+        name: Tanggal Input ROTA 3
+        label: CO
+        length: 10
+      - code: pos_imunisasi_rota_3
+        index: 93
+        name: Pos Imunisasi ROTA 3
+        label: CP
+        length: 50
+      - code: pkm_pemberi_imunisasi_rota_3
+        index: 94
+        name: PKM Pemberi Imunisasi ROTA 3
+        label: CQ
+        length: 50
+      - code: status_imunisasi_rota_3
+        index: 95
+        name: Status Imunisasi ROTA 3
+        label: CR
+        length: 50
+      - code: sumber_pencatatan_imunisasi_rota_3
+        index: 96
+        name: Sumber Pencatatan Imunisasi ROTA 3
+        label: CS
+        length: 50
+      - code: tanggal_imunisasi_pcv_1
+        index: 97
+        name: Tanggal Imunisasi PCV 1
+        label: CT
+        length: 10
+      - code: tanggal_input_pcv_1
+        index: 98
+        name: Tanggal Input PCV 1
+        label: CU
+        length: 10
+      - code: pos_imunisasi_pcv_1
+        index: 99
+        name: Pos Imunisasi PCV 1
+        label: CV
+        length: 50
+      - code: pkm_pemberi_imunisasi_pcv_1
+        index: 100
+        name: PKM Pemberi Imunisasi PCV 1
+        label: CW
+        length: 50
+      - code: status_imunisasi_pcv_1
+        index: 101
+        name: Status Imunisasi PCV 1
+        label: CX
+        length: 50
+      - code: sumber_pencatatan_imunisasi_pcv_1
+        index: 102
+        name: Sumber Pencatatan Imunisasi PCV 1
+        label: CY
+        length: 50
+      - code: tanggal_imunisasi_pcv_2
+        index: 103
+        name: Tanggal Imunisasi PCV 2
+        label: CZ
+        length: 10
+      - code: tanggal_input_pcv_2
+        index: 104
+        name: Tanggal Input PCV 2
+        label: DA
+        length: 10
+      - code: pos_imunisasi_pcv_2
+        index: 105
+        name: Pos Imunisasi PCV 2
+        label: DB
+        length: 50
+      - code: pkm_pemberi_imunisasi_pcv_2
+        index: 106
+        name: PKM Pemberi Imunisasi PCV 2
+        label: DC
+        length: 50
+      - code: status_imunisasi_pcv_2
+        index: 107
+        name: Status Imunisasi PCV 2
+        label: DD
+        length: 50
+      - code: sumber_pencatatan_imunisasi_pcv_2
+        index: 108
+        name: Sumber Pencatatan Imunisasi PCV 2
+        label: DE
+        length: 50
+      - code: tanggal_imunisasi_je_1
+        index: 109
+        name: Tanggal Imunisasi JE 1
+        label: DF
+        length: 10
+      - code: tanggal_input_je_1
+        index: 110
+        name: Tanggal Input JE 1
+        label: DG
+        length: 10
+      - code: pos_imunisasi_je_1
+        index: 111
+        name: Pos Imunisasi JE 1
+        label: DH
+        length: 50
+      - code: pkm_pemberi_imunisasi_je_1
+        index: 112
+        name: PKM Pemberi Imunisasi JE 1
+        label: DI
+        length: 50
+      - code: status_imunisasi_je_1
+        index: 113
+        name: Status Imunisasi JE 1
+        label: DJ
+        length: 50
+      - code: sumber_pencatatan_imunisasi_je_1
+        index: 114
+        name: Sumber Pencatatan Imunisasi JE 1
+        label: DK
+        length: 50
+      - code: tanggal_imunisasi_mr_1
+        index: 115
+        name: Tanggal Imunisasi MR 1
+        label: DL
+        length: 10
+      - code: tanggal_input_mr_1
+        index: 116
+        name: Tanggal Input MR 1
+        label: DM
+        length: 10
+      - code: pos_imunisasi_mr_1
+        index: 117
+        name: Pos Imunisasi MR 1
+        label: DN
+        length: 50
+      - code: pkm_pemberi_imunisasi_mr_1
+        index: 118
+        name: PKM Pemberi Imunisasi MR 1
+        label: DO
+        length: 50
+      - code: status_imunisasi_mr_1
+        index: 119
+        name: Status Imunisasi MR 1
+        label: DP
+        length: 50
+      - code: sumber_pencatatan_imunisasi_mr_1
+        index: 120
+        name: Sumber Pencatatan Imunisasi MR 1
+        label: DQ
+        length: 50
+      - code: tanggal_idl_1
+        index: 121
+        name: Tanggal IDL 1
+        label: DR
+        length: 10
+      - code: tanggal_input_idl_1
+        index: 122
+        name: Tanggal Input IDL 1
+        label: DS
+        length: 10
+      - code: pos_idl_1
+        index: 123
+        name: Pos IDL 1
+        label: DT
+        length: 50
+      - code: pkm_pembentuk_idl_1
+        index: 124
+        name: PKM Pembentuk IDL 1
+        label: DU
+        length: 50
+      - code: status_idl_1
+        index: 125
+        name: Status IDL 1
+        label: DV
+        length: 50
+      - code: sumber_pencatatan_idl_1
+        index: 126
+        name: Sumber Pencatatan IDL 1
+        label: DW
+        length: 50
 
-column_data_imunisasi_baduta:
-  - code: id
-    index: 0
-    name: ID
-    label: A
-    length: 50
-  - code: nik_anak
-    index: 1
-    name: NIK Anak
-    label: B
-    length: 50
-  - code: nama_anak
-    index: 2
-    name: Nama Anak
-    label: C
-    length: 100
-  - code: tanggal_lahir_anak
-    index: 3
-    name: Tanggal Lahir Anak
-    label: D
-    length: 10
-  - code: jenis_kelamin_anak
-    index: 4
-    name: Jenis Kelamin Anak
-    label: E
-    length: 10
-  - code: nik_orang_tua
-    index: 5
-    name: NIK Orang Tua
-    label: F
-    length: 50
-  - code: nama_orang_tua
-    index: 6
-    name: Nama Orang Tua
-    label: G
-    length: 100
-  - code: provinsi
-    index: 7
-    name: Provinsi
-    label: H
-    length: 50
-  - code: kabupaten_kota
-    index: 8
-    name: Kabupaten atau Kota
-    label: I
-    length: 50
-  - code: kecamatan
-    index: 9
-    name: Kecamatan
-    label: J
-    length: 50
-  - code: kelurahan_desa
-    index: 10
-    name: Kelurahan atau Desa
-    label: K
-    length: 50
-  - code: kode_puskesmas
-    index: 11
-    name: Kode Puskesmas
-    label: L
-    length: 20
-  - code: puskesmas
-    index: 12
-    name: Puskesmas
-    label: M
-    length: 100
-  - code: tanggal_imunisasi_dpt_hb_hib_4
-    index: 13
-    name: Tanggal Imunisasi DPT-Hb-Hib 4
-    label: N
-    length: 10
-  - code: tanggal_input_dpt_hb_hib_4
-    index: 14
-    name: Tanggal Input DPT-Hb-Hib 4
-    label: O
-    length: 10
-  - code: pos_imunisasi_dpt_hb_hib_4
-    index: 15
-    name: Pos Imunisasi DPT-Hb-Hib 4
-    label: P
-    length: 50
-  - code: pkm_pemberi_imunisasi_dpt_hb_hib_4
-    index: 16
-    name: PKM Pemberi Imunisasi DPT-Hb-Hib 4
-    label: Q
-    length: 50
-  - code: status_imunisasi_dpt_hb_hib_4
-    index: 17
-    name: Status Imunisasi DPT-Hb-Hib 4
-    label: R
-    length: 50
-  - code: sumber_pencatatan_imunisasi_dpt_hb_hib_4
-    index: 18
-    name: Sumber Pencatatan Imunisasi DPT-Hb-Hib 4
-    label: S
-    length: 50
-  - code: tanggal_imunisasi_mr_2
-    index: 19
-    name: Tanggal Imunisasi MR 2
-    label: T
-    length: 10
-  - code: tanggal_input_mr_2
-    index: 20
-    name: Tanggal Input MR 2
-    label: U
-    length: 10
-  - code: pos_imunisasi_mr_2
-    index: 21
-    name: Pos Imunisasi MR 2
-    label: V
-    length: 50
-  - code: pkm_pemberi_imunisasi_mr_2
-    index: 22
-    name: PKM Pemberi Imunisasi MR 2
-    label: W
-    length: 50
-  - code: status_imunisasi_mr_2
-    index: 23
-    name: Status Imunisasi MR 2
-    label: X
-    length: 50
-  - code: sumber_pencatatan_imunisasi_mr_2
-    index: 24
-    name: Sumber Pencatatan Imunisasi MR 2
-    label: Y
-    length: 50
-  - code: tanggal_ibl_1
-    index: 25
-    name: Tanggal IBL 1
-    label: Z
-    length: 10
-  - code: tanggal_input_ibl_1
-    index: 26
-    name: Tanggal Input IBL 1
-    label: AA
-    length: 10
-  - code: pos_ibl_1
-    index: 27
-    name: Pos IBL 1
-    label: AB
-    length: 50
-  - code: pkm_pembentuk_ibl_1
-    index: 28
-    name: PKM Pembentuk IBL 1
-    label: AC
-    length: 50
-  - code: status_ibl_1
-    index: 29
-    name: Status IBL 1
-    label: AD
-    length: 50
-  - code: sumber_pencatatan_ibl_1
-    index: 30
-    name: Sumber Pencatatan IBL 1
-    label: AE
-    length: 50
-  - code: tanggal_imunisasi_pcv_3
-    index: 31
-    name: Tanggal Imunisasi PCV 3
-    label: AF
-    length: 10
-  - code: tanggal_input_pcv_3
-    index: 32
-    name: Tanggal Input PCV 3
-    label: AG
-    length: 10
-  - code: pos_imunisasi_pcv_3
-    index: 33
-    name: Pos Imunisasi PCV 3
-    label: AH
-    length: 50
-  - code: pkm_pemberi_imunisasi_pcv_3
-    index: 34
-    name: PKM Pemberi Imunisasi PCV 3
-    label: AI
-    length: 50
-  - code: status_imunisasi_pcv_3
-    index: 35
-    name: Status Imunisasi PCV 3
-    label: AJ
-    length: 50
-  - code: sumber_pencatatan_imunisasi_pcv_3
-    index: 36
-    name: Sumber Pencatatan Imunisasi PCV 3
-    label: AK
-    length: 50
+    column_data_imunisasi_baduta:
+      - code: id
+        index: 0
+        name: ID
+        label: A
+        length: 50
+      - code: nik_anak
+        index: 1
+        name: NIK Anak
+        label: B
+        length: 50
+      - code: nama_anak
+        index: 2
+        name: Nama Anak
+        label: C
+        length: 100
+      - code: tanggal_lahir_anak
+        index: 3
+        name: Tanggal Lahir Anak
+        label: D
+        length: 10
+      - code: jenis_kelamin_anak
+        index: 4
+        name: Jenis Kelamin Anak
+        label: E
+        length: 10
+      - code: nik_orang_tua
+        index: 5
+        name: NIK Orang Tua
+        label: F
+        length: 50
+      - code: nama_orang_tua
+        index: 6
+        name: Nama Orang Tua
+        label: G
+        length: 100
+      - code: provinsi
+        index: 7
+        name: Provinsi
+        label: H
+        length: 50
+      - code: kabupaten_kota
+        index: 8
+        name: Kabupaten atau Kota
+        label: I
+        length: 50
+      - code: kecamatan
+        index: 9
+        name: Kecamatan
+        label: J
+        length: 50
+      - code: kelurahan_desa
+        index: 10
+        name: Kelurahan atau Desa
+        label: K
+        length: 50
+      - code: kode_puskesmas
+        index: 11
+        name: Kode Puskesmas
+        label: L
+        length: 20
+      - code: puskesmas
+        index: 12
+        name: Puskesmas
+        label: M
+        length: 100
+      - code: tanggal_imunisasi_dpt_hb_hib_4
+        index: 13
+        name: Tanggal Imunisasi DPT-Hb-Hib 4
+        label: N
+        length: 10
+      - code: tanggal_input_dpt_hb_hib_4
+        index: 14
+        name: Tanggal Input DPT-Hb-Hib 4
+        label: O
+        length: 10
+      - code: pos_imunisasi_dpt_hb_hib_4
+        index: 15
+        name: Pos Imunisasi DPT-Hb-Hib 4
+        label: P
+        length: 50
+      - code: pkm_pemberi_imunisasi_dpt_hb_hib_4
+        index: 16
+        name: PKM Pemberi Imunisasi DPT-Hb-Hib 4
+        label: Q
+        length: 50
+      - code: status_imunisasi_dpt_hb_hib_4
+        index: 17
+        name: Status Imunisasi DPT-Hb-Hib 4
+        label: R
+        length: 50
+      - code: sumber_pencatatan_imunisasi_dpt_hb_hib_4
+        index: 18
+        name: Sumber Pencatatan Imunisasi DPT-Hb-Hib 4
+        label: S
+        length: 50
+      - code: tanggal_imunisasi_mr_2
+        index: 19
+        name: Tanggal Imunisasi MR 2
+        label: T
+        length: 10
+      - code: tanggal_input_mr_2
+        index: 20
+        name: Tanggal Input MR 2
+        label: U
+        length: 10
+      - code: pos_imunisasi_mr_2
+        index: 21
+        name: Pos Imunisasi MR 2
+        label: V
+        length: 50
+      - code: pkm_pemberi_imunisasi_mr_2
+        index: 22
+        name: PKM Pemberi Imunisasi MR 2
+        label: W
+        length: 50
+      - code: status_imunisasi_mr_2
+        index: 23
+        name: Status Imunisasi MR 2
+        label: X
+        length: 50
+      - code: sumber_pencatatan_imunisasi_mr_2
+        index: 24
+        name: Sumber Pencatatan Imunisasi MR 2
+        label: Y
+        length: 50
+      - code: tanggal_ibl_1
+        index: 25
+        name: Tanggal IBL 1
+        label: Z
+        length: 10
+      - code: tanggal_input_ibl_1
+        index: 26
+        name: Tanggal Input IBL 1
+        label: AA
+        length: 10
+      - code: pos_ibl_1
+        index: 27
+        name: Pos IBL 1
+        label: AB
+        length: 50
+      - code: pkm_pembentuk_ibl_1
+        index: 28
+        name: PKM Pembentuk IBL 1
+        label: AC
+        length: 50
+      - code: status_ibl_1
+        index: 29
+        name: Status IBL 1
+        label: AD
+        length: 50
+      - code: sumber_pencatatan_ibl_1
+        index: 30
+        name: Sumber Pencatatan IBL 1
+        label: AE
+        length: 50
+      - code: tanggal_imunisasi_pcv_3
+        index: 31
+        name: Tanggal Imunisasi PCV 3
+        label: AF
+        length: 10
+      - code: tanggal_input_pcv_3
+        index: 32
+        name: Tanggal Input PCV 3
+        label: AG
+        length: 10
+      - code: pos_imunisasi_pcv_3
+        index: 33
+        name: Pos Imunisasi PCV 3
+        label: AH
+        length: 50
+      - code: pkm_pemberi_imunisasi_pcv_3
+        index: 34
+        name: PKM Pemberi Imunisasi PCV 3
+        label: AI
+        length: 50
+      - code: status_imunisasi_pcv_3
+        index: 35
+        name: Status Imunisasi PCV 3
+        label: AJ
+        length: 50
+      - code: sumber_pencatatan_imunisasi_pcv_3
+        index: 36
+        name: Sumber Pencatatan Imunisasi PCV 3
+        label: AK
+        length: 50
 
-column_sasaran_kejar_bayi:
-  - code: nama_anak
-    index: 0
-    name: Nama Anak
-    label: A
-    length: 47
-  - code: usia_anak
-    index: 1
-    name: Usia Anak
-    label: B
-    length: 15
-  - code: tanggal_lahir_anak
-    index: 2
-    name: Tanggal Lahir Anak
-    label: C
-    length: 20
-  - code: jenis_kelamin_anak
-    index: 3
-    name: Jenis Kelamin Anak
-    label: D
-    length: 20
-  - code: nama_orang_tua
-    index: 4
-    name: Nama Orang Tua
-    label: E
-    length: 40
-  - code: puskesmas
-    index: 5
-    name: Puskesmas
-    label: F
-    length: 25
-  - code: status_imunisasi_hb0
-    index: 6
-    name: HBO
-    label: G
-    length: 6
-  - code: status_imunisasi_bcg_1
-    index: 7
-    name: BCG1
-    label: H
-    length: 8
-  - code: status_imunisasi_polio_1
-    index: 8
-    name: POLIO1
-    label: I
-    length: 10
-  - code: status_imunisasi_polio_2
-    index: 9
-    name: POLIO2
-    label: J
-    length: 10
-  - code: status_imunisasi_polio_3
-    index: 10
-    name: POLIO3
-    label: K
-    length: 10
-  - code: status_imunisasi_polio_4
-    index: 11
-    name: POLIO4
-    label: L
-    length: 10
-  - code: status_imunisasi_dpt_hb_hib_1
-    index: 12
-    name: DPT-HB-Hib1
-    label: M
-    length: 16
-  - code: status_imunisasi_dpt_hb_hib_2
-    index: 13
-    name: DPT-HB-Hib2
-    label: N
-    length: 16
-  - code: status_imunisasi_dpt_hb_hib_3
-    index: 14
-    name: DPT-HB-Hib3
-    label: O
-    length: 16
-  - code: status_imunisasi_ipv_1
-    index: 15
-    name: IPV1
-    label: P
-    length: 8
-  - code: status_imunisasi_ipv_2
-    index: 16
-    name: IPV2
-    label: Q
-    length: 8
-  - code: status_imunisasi_rota_1
-    index: 17
-    name: ROTA1
-    label: R
-    length: 10
-  - code: status_imunisasi_rota_2
-    index: 18
-    name: ROTA2
-    label: S
-    length: 10
-  - code: status_imunisasi_rota_3
-    index: 19
-    name: ROTA3
-    label: T
-    length: 10
-  - code: status_imunisasi_pcv_1
-    index: 20
-    name: PCV1
-    label: U
-    length: 8
-  - code: status_imunisasi_pcv_2
-    index: 21
-    name: PCV2
-    label: V
-    length: 8
-  - code: status_imunisasi_je_1
-    index: 22
-    name: JE1
-    label: W
-    length: 8
-  - code: status_imunisasi_mr_1
-    index: 23
-    name: MR1
-    label: X
-    length: 6
-  - code: status_idl_1
-    index: 24
-    name: IDL1
-    label: Y
-    length: 8
+    column_sasaran_kejar_bayi:
+      - code: nama_anak
+        index: 0
+        name: Nama Anak
+        label: A
+        length: 47
+      - code: usia_anak
+        index: 1
+        name: Usia Anak
+        label: B
+        length: 15
+      - code: tanggal_lahir_anak
+        index: 2
+        name: Tanggal Lahir Anak
+        label: C
+        length: 20
+      - code: jenis_kelamin_anak
+        index: 3
+        name: Jenis Kelamin Anak
+        label: D
+        length: 20
+      - code: nama_orang_tua
+        index: 4
+        name: Nama Orang Tua
+        label: E
+        length: 40
+      - code: puskesmas
+        index: 5
+        name: Puskesmas
+        label: F
+        length: 25
+      - code: status_imunisasi_hb0
+        index: 6
+        name: HBO
+        label: G
+        length: 6
+      - code: status_imunisasi_bcg_1
+        index: 7
+        name: BCG1
+        label: H
+        length: 8
+      - code: status_imunisasi_polio_1
+        index: 8
+        name: POLIO1
+        label: I
+        length: 10
+      - code: status_imunisasi_polio_2
+        index: 9
+        name: POLIO2
+        label: J
+        length: 10
+      - code: status_imunisasi_polio_3
+        index: 10
+        name: POLIO3
+        label: K
+        length: 10
+      - code: status_imunisasi_polio_4
+        index: 11
+        name: POLIO4
+        label: L
+        length: 10
+      - code: status_imunisasi_dpt_hb_hib_1
+        index: 12
+        name: DPT-HB-Hib1
+        label: M
+        length: 16
+      - code: status_imunisasi_dpt_hb_hib_2
+        index: 13
+        name: DPT-HB-Hib2
+        label: N
+        length: 16
+      - code: status_imunisasi_dpt_hb_hib_3
+        index: 14
+        name: DPT-HB-Hib3
+        label: O
+        length: 16
+      - code: status_imunisasi_ipv_1
+        index: 15
+        name: IPV1
+        label: P
+        length: 8
+      - code: status_imunisasi_ipv_2
+        index: 16
+        name: IPV2
+        label: Q
+        length: 8
+      - code: status_imunisasi_rota_1
+        index: 17
+        name: ROTA1
+        label: R
+        length: 10
+      - code: status_imunisasi_rota_2
+        index: 18
+        name: ROTA2
+        label: S
+        length: 10
+      - code: status_imunisasi_rota_3
+        index: 19
+        name: ROTA3
+        label: T
+        length: 10
+      - code: status_imunisasi_pcv_1
+        index: 20
+        name: PCV1
+        label: U
+        length: 8
+      - code: status_imunisasi_pcv_2
+        index: 21
+        name: PCV2
+        label: V
+        length: 8
+      - code: status_imunisasi_je_1
+        index: 22
+        name: JE1
+        label: W
+        length: 8
+      - code: status_imunisasi_mr_1
+        index: 23
+        name: MR1
+        label: X
+        length: 6
+      - code: status_idl_1
+        index: 24
+        name: IDL1
+        label: Y
+        length: 8
 
-column_sasaran_kejar_baduta:
-  - code: nama_anak
-    index: 0
-    name: Nama Anak
-    label: A
-    length: 47
-  - code: tanggal_lahir_anak
-    index: 1
-    name: Tanggal Lahir Anak
-    label: B
-    length: 20
-  - code: usia_anak
-    index: 2
-    name: Usia
-    label: C
-    length: 15
-  - code: jenis_kelamin_anak
-    index: 3
-    name: Jenis Kelamin Anak
-    label: D
-    length: 20
-  - code: nama_orang_tua
-    index: 4
-    name: Nama Orang Tua
-    label: E
-    length: 40
-  - code: puskesmas
-    index: 5
-    name: Puskesmas
-    label: F
-    length: 25
-  - code: status_imunisasi_dpt_hb_hib_4
-    index: 6
-    name: DPT-Hb-Hib 4
-    label: G
-    length: 16
-  - code: status_imunisasi_mr_2
-    index: 7
-    name: MR 2
-    label: H
-    length: 16
-  - code: status_ibl_1
-    index: 8
-    name: Status IBL 1
-    label: I
-    length: 10
-  - code: status_imunisasi_pcv_3
-    index: 9
-    name: PCV 3
-    label: J
-    length: 16
+    column_sasaran_kejar_baduta:
+      - code: nama_anak
+        index: 0
+        name: Nama Anak
+        label: A
+        length: 47
+      - code: tanggal_lahir_anak
+        index: 1
+        name: Tanggal Lahir Anak
+        label: B
+        length: 20
+      - code: usia_anak
+        index: 2
+        name: Usia
+        label: C
+        length: 15
+      - code: jenis_kelamin_anak
+        index: 3
+        name: Jenis Kelamin Anak
+        label: D
+        length: 20
+      - code: nama_orang_tua
+        index: 4
+        name: Nama Orang Tua
+        label: E
+        length: 40
+      - code: puskesmas
+        index: 5
+        name: Puskesmas
+        label: F
+        length: 25
+      - code: status_imunisasi_dpt_hb_hib_4
+        index: 6
+        name: DPT-Hb-Hib 4
+        label: G
+        length: 16
+      - code: status_imunisasi_mr_2
+        index: 7
+        name: MR 2
+        label: H
+        length: 16
+      - code: status_ibl_1
+        index: 8
+        name: IBL 1
+        label: I
+        length: 10
+      - code: status_imunisasi_pcv_3
+        index: 9
+        name: PCV 3
+        label: J
+        length: 16

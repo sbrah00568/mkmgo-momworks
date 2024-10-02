@@ -545,36 +545,37 @@ kejar_config:
         name: Sumber Pencatatan Imunisasi PCV 2
         label: DE
         length: 50
-      - code: tanggal_imunisasi_je_1
-        index: 109
-        name: Tanggal Imunisasi JE 1
-        label: DF
-        length: 10
-      - code: tanggal_input_je_1
-        index: 110
-        name: Tanggal Input JE 1
-        label: DG
-        length: 10
-      - code: pos_imunisasi_je_1
-        index: 111
-        name: Pos Imunisasi JE 1
-        label: DH
-        length: 50
-      - code: pkm_pemberi_imunisasi_je_1
-        index: 112
-        name: PKM Pemberi Imunisasi JE 1
-        label: DI
-        length: 50
-      - code: status_imunisasi_je_1
-        index: 113
-        name: Status Imunisasi JE 1
-        label: DJ
-        length: 50
-      - code: sumber_pencatatan_imunisasi_je_1
-        index: 114
-        name: Sumber Pencatatan Imunisasi JE 1
-        label: DK
-        length: 50
+      # IGNORE JE from mapping --> not yet implemented immunization
+      # - code: tanggal_imunisasi_je_1
+      #   index: 109
+      #   name: Tanggal Imunisasi JE 1
+      #   label: DF
+      #   length: 10
+      # - code: tanggal_input_je_1
+      #   index: 110
+      #   name: Tanggal Input JE 1
+      #   label: DG
+      #   length: 10
+      # - code: pos_imunisasi_je_1
+      #   index: 111
+      #   name: Pos Imunisasi JE 1
+      #   label: DH
+      #   length: 50
+      # - code: pkm_pemberi_imunisasi_je_1
+      #   index: 112
+      #   name: PKM Pemberi Imunisasi JE 1
+      #   label: DI
+      #   length: 50
+      # - code: status_imunisasi_je_1
+      #   index: 113
+      #   name: Status Imunisasi JE 1
+      #   label: DJ
+      #   length: 50
+      # - code: sumber_pencatatan_imunisasi_je_1
+      #   index: 114
+      #   name: Sumber Pencatatan Imunisasi JE 1
+      #   label: DK
+      #   length: 50
       - code: tanggal_imunisasi_mr_1
         index: 115
         name: Tanggal Imunisasi MR 1
@@ -934,20 +935,15 @@ kejar_config:
         name: PCV2
         label: V
         length: 8
-      - code: status_imunisasi_je_1
-        index: 22
-        name: JE1
-        label: W
-        length: 8
       - code: status_imunisasi_mr_1
-        index: 23
+        index: 22
         name: MR1
-        label: X
+        label: W
         length: 6
       - code: status_idl_1
-        index: 24
+        index: 23
         name: IDL1
-        label: Y
+        label: X
         length: 8
 
     column_sasaran_kejar_baduta:

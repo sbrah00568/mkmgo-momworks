@@ -606,7 +606,7 @@ kejar_config:
         name: Sumber Pencatatan Imunisasi MR 1
         label: DQ
         length: 50
-      - code: tanggal_idl_1
+      - code: tanggal_imunisasi_idl_1
         index: 121
         name: Tanggal IDL 1
         label: DR
@@ -616,7 +616,7 @@ kejar_config:
         name: Tanggal Input IDL 1
         label: DS
         length: 10
-      - code: pos_idl_1
+      - code: pos_imunisasi_idl_1
         index: 123
         name: Pos IDL 1
         label: DT
@@ -626,7 +626,7 @@ kejar_config:
         name: PKM Pembentuk IDL 1
         label: DU
         length: 50
-      - code: status_idl_1
+      - code: status_imunisasi_idl_1
         index: 125
         name: Status IDL 1
         label: DV
@@ -719,7 +719,7 @@ kejar_config:
         label: P
         length: 50
       - code: pkm_pemberi_imunisasi_dpt_hb_hib_4
-        index: 16
+        index: 100
         name: PKM Pemberi Imunisasi DPT-Hb-Hib 4
         label: Q
         length: 50
@@ -763,7 +763,7 @@ kejar_config:
         name: Sumber Pencatatan Imunisasi MR 2
         label: Y
         length: 50
-      - code: tanggal_ibl_1
+      - code: tanggal_imunisasi_ibl_1
         index: 25
         name: Tanggal IBL 1
         label: Z
@@ -773,7 +773,7 @@ kejar_config:
         name: Tanggal Input IBL 1
         label: AA
         length: 10
-      - code: pos_ibl_1
+      - code: pos_imunisasi_ibl_1
         index: 27
         name: Pos IBL 1
         label: AB
@@ -783,7 +783,7 @@ kejar_config:
         name: PKM Pembentuk IBL 1
         label: AC
         length: 50
-      - code: status_ibl_1
+      - code: status_imunisasi_ibl_1
         index: 29
         name: Status IBL 1
         label: AD
@@ -855,96 +855,266 @@ kejar_config:
         name: Puskesmas
         label: F
         length: 25
-      - code: status_imunisasi_hb0
+      - code: tanggal_imunisasi_hb0
         index: 6
-        name: HBO
+        name: Tanggal Imunisasi HBO
         label: G
-        length: 6
-      - code: status_imunisasi_bcg_1
+        length: 16
+      - code: pos_imunisasi_hb0
         index: 7
-        name: BCG1
+        name: Pos Imunisasi HBO
         label: H
-        length: 8
-      - code: status_imunisasi_polio_1
+        length: 16
+      - code: status_imunisasi_hb0
         index: 8
-        name: POLIO1
+        name: Status Imunisasi HBO
         label: I
-        length: 10
-      - code: status_imunisasi_polio_2
+        length: 16
+      - code: tanggal_imunisasi_bcg_1
         index: 9
-        name: POLIO2
+        name: Tanggal Imunisasi BCG1
         label: J
-        length: 10
-      - code: status_imunisasi_polio_3
+        length: 16
+      - code: pos_imunisasi_bcg_1
         index: 10
-        name: POLIO3
+        name: Pos Imunisasi BCG1
         label: K
-        length: 10
-      - code: status_imunisasi_polio_4
+        length: 16
+      - code: status_imunisasi_bcg_1
         index: 11
-        name: POLIO4
+        name: Status Imunisasi BCG1
         label: L
-        length: 10
-      - code: status_imunisasi_dpt_hb_hib_1
+        length: 16
+      - code: tanggal_imunisasi_polio_1
         index: 12
-        name: DPT-HB-Hib1
+        name: Tanggal Imunisasi POLIO1
         label: M
         length: 16
-      - code: status_imunisasi_dpt_hb_hib_2
+      - code: pos_imunisasi_polio_1
         index: 13
-        name: DPT-HB-Hib2
+        name: Pos Imunisasi POLIO1
         label: N
         length: 16
-      - code: status_imunisasi_dpt_hb_hib_3
+      - code: status_imunisasi_polio_1
         index: 14
-        name: DPT-HB-Hib3
+        name: Status Imunisasi POLIO1
         label: O
         length: 16
-      - code: status_imunisasi_ipv_1
+      - code: tanggal_imunisasi_polio_2
         index: 15
-        name: IPV1
+        name: Tanggal Imunisasi POLIO2
         label: P
-        length: 8
-      - code: status_imunisasi_ipv_2
+        length: 16
+      - code: pos_imunisasi_polio_2
         index: 16
-        name: IPV2
+        name: Pos Imunisasi POLIO2
         label: Q
-        length: 8
-      - code: status_imunisasi_rota_1
+        length: 16
+      - code: status_imunisasi_polio_2
         index: 17
-        name: ROTA1
+        name: Status Imunisasi POLIO2
         label: R
-        length: 10
-      - code: status_imunisasi_rota_2
+        length: 16
+      - code: tanggal_imunisasi_polio_3
         index: 18
-        name: ROTA2
+        name: Tanggal Imunisasi POLIO3
         label: S
-        length: 10
-      - code: status_imunisasi_rota_3
+        length: 16
+      - code: pos_imunisasi_polio_3
         index: 19
-        name: ROTA3
+        name: Pos Imunisasi POLIO3
         label: T
-        length: 10
-      - code: status_imunisasi_pcv_1
+        length: 16
+      - code: status_imunisasi_polio_3
         index: 20
-        name: PCV1
+        name: Status Imunisasi POLIO3
         label: U
-        length: 8
-      - code: status_imunisasi_pcv_2
+        length: 16
+      - code: tanggal_imunisasi_polio_4
         index: 21
-        name: PCV2
+        name: Tanggal Imunisasi POLIO4
         label: V
-        length: 8
-      - code: status_imunisasi_mr_1
+        length: 16
+      - code: pos_imunisasi_polio_4
         index: 22
-        name: MR1
+        name: Pos Imunisasi POLIO4
         label: W
-        length: 6
-      - code: status_idl_1
+        length: 16
+      - code: status_imunisasi_polio_4
         index: 23
-        name: IDL1
+        name: Status Imunisasi POLIO4
         label: X
-        length: 8
+        length: 16
+      - code: tanggal_imunisasi_dpt_hb_hib_1
+        index: 24
+        name: Tanggal Imunisasi DPT-HB-Hib1
+        label: Y
+        length: 16
+      - code: pos_imunisasi_dpt_hb_hib_1
+        index: 25
+        name: Pos Imunisasi DPT-HB-Hib1
+        label: Z
+        length: 16
+      - code: status_imunisasi_dpt_hb_hib_1
+        index: 26
+        name: Status Imunisasi DPT-HB-Hib1
+        label: AA
+        length: 16
+      - code: tanggal_imunisasi_dpt_hb_hib_2
+        index: 27
+        name: Tanggal Imunisasi DPT-HB-Hib2
+        label: AB
+        length: 16
+      - code: pos_imunisasi_dpt_hb_hib_2
+        index: 28
+        name: Pos Imunisasi DPT-HB-Hib2
+        label: AC
+        length: 16
+      - code: status_imunisasi_dpt_hb_hib_2
+        index: 29
+        name: Status Imunisasi DPT-HB-Hib2
+        label: AD
+        length: 16
+      - code: tanggal_imunisasi_dpt_hb_hib_3
+        index: 30
+        name: Tanggal Imunisasi DPT-HB-Hib3
+        label: AE
+        length: 16
+      - code: pos_imunisasi_dpt_hb_hib_3
+        index: 31
+        name: Pos Imunisasi DPT-HB-Hib3
+        label: AF
+        length: 16
+      - code: status_imunisasi_dpt_hb_hib_3
+        index: 32
+        name: Status Imunisasi DPT-HB-Hib3
+        label: AG
+        length: 16
+      - code: tanggal_imunisasi_ipv_1
+        index: 33
+        name: Tanggal Imunisasi IPV1
+        label: AH
+        length: 16
+      - code: pos_imunisasi_ipv_1
+        index: 34
+        name: Pos Imunisasi IPV1
+        label: AI
+        length: 16
+      - code: status_imunisasi_ipv_1
+        index: 35
+        name: Status Imunisasi IPV1
+        label: AJ
+        length: 16
+      - code: tanggal_imunisasi_ipv_2
+        index: 36
+        name: Tanggal Imunisasi IPV2
+        label: AK
+        length: 16
+      - code: pos_imunisasi_ipv_2
+        index: 37
+        name: Pos Imunisasi IPV2
+        label: AL
+        length: 16
+      - code: status_imunisasi_ipv_2
+        index: 38
+        name: Status Imunisasi IPV2
+        label: AM
+        length: 16
+      - code: tanggal_imunisasi_rota_1
+        index: 39
+        name: Tanggal Imunisasi ROTA1
+        label: AN
+        length: 16
+      - code: tanggal_imunisasi_rota_2
+        index: 40
+        name: Tanggal Imunisasi ROTA2
+        label: AO
+        length: 16
+      - code: pos_imunisasi_rota_2
+        index: 41
+        name: Pos Imunisasi ROTA2
+        label: AP
+        length: 16
+      - code: status_imunisasi_rota_2
+        index: 42
+        name: Status Imunisasi ROTA2
+        label: AQ
+        length: 16
+      - code: tanggal_imunisasi_rota_3
+        index: 43
+        name: Tanggal Imunisasi ROTA3
+        label: AR
+        length: 16
+      - code: pos_imunisasi_rota_3
+        index: 44
+        name: Pos Imunisasi ROTA3
+        label: AS
+        length: 16
+      - code: status_imunisasi_rota_3
+        index: 45
+        name: Status Imunisasi ROTA3
+        label: AT
+        length: 16
+      - code: tanggal_imunisasi_pcv_1
+        index: 46
+        name: Tanggal Imunisasi PCV1
+        label: AU
+        length: 16
+      - code: pos_imunisasi_pcv_1
+        index: 47
+        name: Pos Imunisasi PCV1
+        label: AV
+        length: 16
+      - code: status_imunisasi_pcv_1
+        index: 48
+        name: Status Imunisasi PCV1
+        label: AW
+        length: 16
+      - code: tanggal_imunisasi_pcv_2
+        index: 49
+        name: Tanggal Imunisasi PCV2
+        label: AX
+        length: 16
+      - code: pos_imunisasi_pcv_2
+        index: 50
+        name: Pos Imunisasi PCV2
+        label: AY
+        length: 16
+      - code: status_imunisasi_pcv_2
+        index: 51
+        name: Status Imunisasi PCV2
+        label: AZ
+        length: 16
+      - code: tanggal_imunisasi_mr_1
+        index: 52
+        name: Tanggal Imunisasi MR1
+        label: BA
+        length: 16
+      - code: pos_imunisasi_mr_1
+        index: 53
+        name: Pos Imunisasi MR1
+        label: BB
+        length: 16
+      - code: status_imunisasi_mr_1
+        index: 54
+        name: Status Imunisasi MR1
+        label: BC
+        length: 16
+      - code: tanggal_imunisasi_idl_1
+        index: 55
+        name: Tanggal IDL1
+        label: BD
+        length: 16
+      - code: pos_imunisasi_idl_1
+        index: 56
+        name: Pos IDL1
+        label: BE
+        length: 16
+      - code: status_imunisasi_idl_1
+        index: 57
+        name: Status IDL1
+        label: BF
+        length: 16
 
     column_sasaran_kejar_baduta:
       - code: nama_anak
@@ -977,23 +1147,63 @@ kejar_config:
         name: Puskesmas
         label: F
         length: 25
-      - code: status_imunisasi_dpt_hb_hib_4
+      - code: tanggal_imunisasi_dpt_hb_hib_4
         index: 6
-        name: DPT-Hb-Hib 4
+        name: Tanggal Imunisasi DPT-Hb-Hib 4
         label: G
         length: 16
-      - code: status_imunisasi_mr_2
+      - code: pos_imunisasi_dpt_hb_hib_4
         index: 7
-        name: MR 2
+        name: Pos Imunisasi DPT-Hb-Hib 4
         label: H
         length: 16
-      - code: status_ibl_1
+      - code: status_imunisasi_dpt_hb_hib_4
         index: 8
-        name: IBL 1
+        name: Status Imunisasi DPT-Hb-Hib 4
         label: I
-        length: 10
-      - code: status_imunisasi_pcv_3
+        length: 16
+      - code: tanggal_imunisasi_mr_2
         index: 9
-        name: PCV 3
+        name: Tanggal Imunisasi MR 2
         label: J
+        length: 16
+      - code: pos_imunisasi_mr_2
+        index: 10
+        name: Pos Imunisasi MR 2
+        label: K
+        length: 16
+      - code: status_imunisasi_mr_2
+        index: 11
+        name: Status Imunisasi MR 2
+        label: L
+        length: 16
+      - code: tanggal_imunisasi_ibl_1
+        index: 12
+        name: Tanggal IBL 1
+        label: M
+        length: 16
+      - code: pos_imunisasi_ibl_1
+        index: 13
+        name: Pos IBL 1
+        label: N
+        length: 16
+      - code: status_imunisasi_ibl_1
+        index: 14
+        name: Status IBL 1
+        label: O
+        length: 16
+      - code: tanggal_imunisasi_pcv_3
+        index: 15
+        name: Tanggal Imunisasi PCV 3
+        label: P
+        length: 16
+      - code: pos_imunisasi_pcv_3
+        index: 16
+        name: Pos Imunisasi PCV 3
+        label: Q
+        length: 16
+      - code: status_imunisasi_pcv_3
+        index: 17
+        name: Status Imunisasi PCV 3
+        label: R
         length: 16

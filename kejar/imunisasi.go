@@ -10,32 +10,43 @@ import (
 
 // consts for sasaran imunisasi kejar
 const (
-	NamaAnak            = "nama_anak"
-	UsiaAnak            = "usia_anak"
-	TanggalLahirAnak    = "tanggal_lahir_anak"
-	JenisKelaminAnak    = "jenis_kelamin_anak"
-	NamaOrangTua        = "nama_orang_tua"
-	Puskesmas           = "puskesmas"
-	StatusImunisasiPCV3 = "status_imunisasi_pcv_3"
-	StatusImunisasiIDL1 = "status_idl_1"
-	Wanasari            = "WANASARI"
+	NamaAnak             = "nama_anak"
+	UsiaAnak             = "usia_anak"
+	TanggalLahirAnak     = "tanggal_lahir_anak"
+	JenisKelaminAnak     = "jenis_kelamin_anak"
+	NamaOrangTua         = "nama_orang_tua"
+	Puskesmas            = "puskesmas"
+	StatusImunisasiPCV3  = "status_imunisasi_pcv_3"
+	StatusImunisasiIDL1  = "status_imunisasi_idl_1"
+	Wanasari             = "WANASARI"
+	StatusImunisasiPrfx  = "status_imunisasi_"
+	TanggalImunisasiPrfx = "tanggal_imunisasi_"
+	PosImunisasiPrfx     = "pos_imunisasi_"
+	EmptyString          = ""
 )
 
 // DataImunisasiAnak represents general immunization data for both bayi and baduta
 type DataImunisasiAnak struct {
-	NamaAnak         string         `json:"namaAnak"`
-	UsiaAnak         string         `json:"usiaAnak"`
-	TanggalLahirAnak string         `json:"tanggalLahirAnak"`
-	JenisKelaminAnak string         `json:"jenisKelaminAnak"`
-	NamaOrangTua     string         `json:"namaOrangTua"`
-	Puskesmas        string         `json:"puskesmas"`
-	MapImunisasi     map[string]int // key = code status imunisasi, value = 0 (not ideal) or 1 (ideal)
+	NamaAnak         string                     `json:"namaAnak"`
+	UsiaAnak         string                     `json:"usiaAnak"`
+	TanggalLahirAnak string                     `json:"tanggalLahirAnak"`
+	JenisKelaminAnak string                     `json:"jenisKelaminAnak"`
+	NamaOrangTua     string                     `json:"namaOrangTua"`
+	Puskesmas        string                     `json:"puskesmas"`
+	MapImunisasi     map[string]DetailImunisasi `json:"mapImunisasi"`
+}
+
+// DetailImunisasi represents detail data of given immunization
+type DetailImunisasi struct {
+	TanggalImunisasi string
+	PosImunisasi     string
+	Status           int
 }
 
 // NewDataImunisasiAnak creates a new DataImunisasiAnak instance
 func NewDataImunisasiAnak() *DataImunisasiAnak {
 	return &DataImunisasiAnak{
-		MapImunisasi: make(map[string]int),
+		MapImunisasi: make(map[string]DetailImunisasi),
 	}
 }
 
@@ -50,9 +61,39 @@ func (data *DataImunisasiAnak) SetCellValue(columnCode, cell string, sourceFile 
 
 	if handler, exists := cellHandlers[columnCode]; exists {
 		handler()
-	} else if strings.Contains(columnCode, "status_") {
-		data.MapImunisasi[columnCode] = GetStatusImunisasi(GetCellValue(sourceFile, cell))
+	} else if imunisasiCode := GetMapImunisasiCode(columnCode); imunisasiCode != EmptyString {
+		imunisasi := data.MapImunisasi[imunisasiCode]
+		imunisasi.SetDetailImunisasi(columnCode, cell, sourceFile)
+		data.MapImunisasi[imunisasiCode] = imunisasi
 	}
+}
+
+// SetDetailImunisasi sets detail imunisasi for DataImunisasiAnak
+func (imunisasi *DetailImunisasi) SetDetailImunisasi(columnCode, cell string, sourceFile SourceXlsxFile) {
+	switch {
+	case strings.Contains(columnCode, StatusImunisasiPrfx):
+		imunisasi.Status = GetStatusImunisasi(GetCellValue(sourceFile, cell))
+	case strings.Contains(columnCode, TanggalImunisasiPrfx):
+		imunisasi.TanggalImunisasi = GetCellValue(sourceFile, cell)
+	case strings.Contains(columnCode, PosImunisasiPrfx):
+		imunisasi.PosImunisasi = GetCellValue(sourceFile, cell)
+	}
+}
+
+// GetMapImunisasiCode returns map imunisasi code based on prefix when found, else returns empty
+func GetMapImunisasiCode(columnCode string) string {
+	prefixDetailImunisasi := map[string]string{
+		StatusImunisasiPrfx:  EmptyString,
+		TanggalImunisasiPrfx: EmptyString,
+		PosImunisasiPrfx:     EmptyString,
+	}
+
+	for key, value := range prefixDetailImunisasi {
+		if strings.Contains(columnCode, key) {
+			return strings.ReplaceAll(columnCode, key, value)
+		}
+	}
+	return EmptyString
 }
 
 // GetStatusImunisasi returns an integer status based on the input string.
@@ -68,7 +109,7 @@ func GetStatusImunisasi(status string) int {
 func (data *DataImunisasiAnak) CountNonIdealImmunizations() int {
 	count := 0
 	for _, value := range data.MapImunisasi {
-		if value != 0 {
+		if value.Status != 0 {
 			count++
 		}
 	}

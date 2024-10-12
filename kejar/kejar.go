@@ -184,8 +184,14 @@ func (svc *SasaranKejarService) SetBody(newFile NewXlsxFile) {
 		file.SetCellValue(sheetName, sasaranKejarMap[NamaOrangTua].Label+rowAt, sasaranKejar.NamaOrangTua)
 		file.SetCellValue(sheetName, sasaranKejarMap[Puskesmas].Label+rowAt, sasaranKejar.Puskesmas)
 		for key, value := range sasaranKejar.MapImunisasi {
-			file.SetCellValue(sheetName, sasaranKejarMap[key].Label+rowAt, value)
-			file.SetCellStyle(sheetName, sasaranKejarMap[key].Label+rowAt, sasaranKejarMap[key].Label+rowAt, newFile.BodyStyle)
+			file.SetCellValue(sheetName, sasaranKejarMap[TanggalImunisasiPrfx+key].Label+rowAt, value.TanggalImunisasi)
+			file.SetCellStyle(sheetName, sasaranKejarMap[TanggalImunisasiPrfx+key].Label+rowAt, sasaranKejarMap[TanggalImunisasiPrfx+key].Label+rowAt, newFile.BodyStyle)
+
+			file.SetCellValue(sheetName, sasaranKejarMap[PosImunisasiPrfx+key].Label+rowAt, value.PosImunisasi)
+			file.SetCellStyle(sheetName, sasaranKejarMap[PosImunisasiPrfx+key].Label+rowAt, sasaranKejarMap[PosImunisasiPrfx+key].Label+rowAt, newFile.BodyStyle)
+
+			file.SetCellValue(sheetName, sasaranKejarMap[StatusImunisasiPrfx+key].Label+rowAt, value.Status)
+			file.SetCellStyle(sheetName, sasaranKejarMap[StatusImunisasiPrfx+key].Label+rowAt, sasaranKejarMap[StatusImunisasiPrfx+key].Label+rowAt, newFile.BodyStyle)
 		}
 	}
 

@@ -24,35 +24,6 @@ func GetSasaranTypeFromContext(ctx context.Context) string {
 	return EMPTY_STRING
 }
 
-// GetCurrentDateStr returns the current Indonesian date as a formatted string in the format "Day Month" (e.g., "25 September").
-func GetCurrentDateStr() string {
-	months := map[time.Month]string{
-		time.January:   "Januari",
-		time.February:  "Februari",
-		time.March:     "Maret",
-		time.April:     "April",
-		time.May:       "Mei",
-		time.June:      "Juni",
-		time.July:      "Juli",
-		time.August:    "Agustus",
-		time.September: "September",
-		time.October:   "Oktober",
-		time.November:  "November",
-		time.December:  "Desember",
-	}
-
-	currentDate := time.Now()
-	return fmt.Sprintf("%d %s", currentDate.Day(), months[currentDate.Month()])
-}
-
-// CapitalizeFirstChar capitalizes the first character of a string.
-func CapitalizeFirstChar(input string) string {
-	if len(input) == 0 {
-		return input
-	}
-	return strings.ToUpper(string(input[0])) + input[1:]
-}
-
 // common consts
 const (
 	EMPTY_STRING           = ""
@@ -101,12 +72,6 @@ type DetailImunisasi struct {
 	Tanggal map[string]string
 	Pos     map[string]string
 	Status  map[string]int
-}
-
-// Column represents column characteristics for the generated sasaran imunisasi xlsx file
-type Column struct {
-	Label string
-	Width float64
 }
 
 // SasaranImunisasiService manages sasaran imunisasi data and column mapping for bayi and baduta
@@ -159,22 +124,6 @@ func SetColumnMap(cfg *SasaranImunisasiConfig, imunisasi []string) map[string]Co
 	}
 
 	return columnMap
-}
-
-// GetXlsxColumnLabel generates an Excel column label based on a zero-based index.
-// For example, index 0 returns "A", index 1 returns "B", and so on.
-func GetXlsxColumnLabel(index int) string {
-	if index == 0 {
-		return "A"
-	}
-
-	label := EMPTY_STRING
-	for index > 0 {
-		index-- // Excel column index is 1-based, adjust to 0-based
-		label = string(rune('A'+(index%26))) + label
-		index /= 26
-	}
-	return label
 }
 
 // GenerateFile processes the provided source Excel file and generates a new xlsx file
@@ -311,6 +260,28 @@ func (svc *SasaranImunisasiService) GenerateFile(sourceFile SourceXlsxFile) (*Xl
 	}, nil
 }
 
+// GetStatusImunisasi returns an integer status based on the input string.
+// "ideal" corresponds to 0, while any other status corresponds to 1.
+func GetStatusImunisasi(status string) int {
+	if status == "ideal" {
+		return 0
+	}
+	return 1
+}
+
+// CountNonIdealImmunizations counts all non ideal imunisasi
+func (s *SasaranImunisasi) CountNonIdealImmunizations() int {
+	count := 0
+	for _, detailImunisasi := range s.DetailImunisasi {
+		for _, status := range detailImunisasi.Status {
+			if status > 0 {
+				count++
+			}
+		}
+	}
+	return count
+}
+
 // SortDataImunisasiAnak sorts data imunisasi anak based on tanggal lahir (DESC)
 func SortDataImunisasiAnak[T any](list []T, dateExtractor func(T) string) {
 	sort.Slice(list, func(i, j int) bool {
@@ -333,28 +304,6 @@ func SortDataImunisasiAnak[T any](list []T, dateExtractor func(T) string) {
 
 		return dateI.Before(dateJ)
 	})
-}
-
-// CountNonIdealImmunizations counts all non ideal imunisasi
-func (s *SasaranImunisasi) CountNonIdealImmunizations() int {
-	count := 0
-	for _, detailImunisasi := range s.DetailImunisasi {
-		for _, status := range detailImunisasi.Status {
-			if status > 0 {
-				count++
-			}
-		}
-	}
-	return count
-}
-
-// GetStatusImunisasi returns an integer status based on the input string.
-// "ideal" corresponds to 0, while any other status corresponds to 1.
-func GetStatusImunisasi(status string) int {
-	if status == "ideal" {
-		return 0
-	}
-	return 1
 }
 
 // GetSasaranColumnMap returns sasaran column map and last column label based on sasaran type
@@ -423,19 +372,46 @@ func (svc *SasaranImunisasiService) GetFileName(sasaranType string) string {
 	return "Sasaran Imunisasi " + CapitalizeFirstChar(sasaranType) + SPACE + GetCurrentDateStr()
 }
 
+// CapitalizeFirstChar capitalizes the first character of a string.
+func CapitalizeFirstChar(input string) string {
+	if len(input) == 0 {
+		return input
+	}
+	return strings.ToUpper(string(input[0])) + input[1:]
+}
+
+// GetCurrentDateStr returns the current Indonesian date as a formatted string in the format "Day Month" (e.g., "25 September").
+func GetCurrentDateStr() string {
+	months := map[time.Month]string{
+		time.January:   "Januari",
+		time.February:  "Februari",
+		time.March:     "Maret",
+		time.April:     "April",
+		time.May:       "Mei",
+		time.June:      "Juni",
+		time.July:      "Juli",
+		time.August:    "Agustus",
+		time.September: "September",
+		time.October:   "Oktober",
+		time.November:  "November",
+		time.December:  "Desember",
+	}
+
+	currentDate := time.Now()
+	return fmt.Sprintf("%d %s", currentDate.Day(), months[currentDate.Month()])
+}
+
 // SetTitle sets the title of the Excel sheet for the generated file
 func (svc *SasaranImunisasiService) SetTitle(newFile NewXlsxFile) {
 	file := newFile.ExcelizeFile
 	sheetName := newFile.SheetName
 	rowAt := strconv.Itoa(newFile.TitleRowAt)
-	sasaranType := GetSasaranTypeFromContext(newFile.Ctx)
-	title := svc.GetFileName(sasaranType)
 	sasaranImunisasiMap, lastColumnLabel := svc.GetSasaranColumnMap(newFile.Ctx)
 
 	firstCell := sasaranImunisasiMap[NAMA_ANAK].Label + rowAt
 	lastCell := lastColumnLabel + rowAt
 
-	file.SetCellValue(sheetName, firstCell, title)
+	file.SetCellValue(sheetName, firstCell, svc.GetFileName(GetSasaranTypeFromContext(newFile.Ctx)))
 	file.MergeCell(sheetName, firstCell, lastCell)
 	file.SetCellStyle(sheetName, firstCell, lastCell, newFile.TitleStyle)
 }

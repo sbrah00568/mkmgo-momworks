@@ -12,93 +12,120 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// SasaranImunisasiHandler handles the HTTP requests for generating Excel files,
-// utilizing services that implement XlsxFileTransformer interface for processing bayi and baduta data.
+// SasaranImunisasiHandler handles HTTP requests for generating Excel files.
 type SasaranImunisasiHandler struct {
 	SasaranImunisasiService XlsxFileTransformer
 }
 
-// NewSasaranImunisasiHandler initializes a new SasaranImunisasiHandler with the provided services.
-func NewSasaranImunisasiHandler(sasaranImunisasiSvc XlsxFileTransformer) *SasaranImunisasiHandler {
+// NewSasaranImunisasiHandler initializes a new SasaranImunisasiHandler.
+func NewSasaranImunisasiHandler(svc XlsxFileTransformer) *SasaranImunisasiHandler {
 	return &SasaranImunisasiHandler{
-		SasaranImunisasiService: sasaranImunisasiSvc,
+		SasaranImunisasiService: svc,
 	}
 }
 
-// GenerateFileHandler handles file uploads and generates the new Sasaran Imunisasi Excel file based on the input.
-// The input is data imunisasi anak which can be either bayi or baduta. Based on thee data, this api will filter and validate
-// to retrieve Sasaran Imunisasi which contains data anak that yet to receive complete immunization.
-func (h *SasaranImunisasiHandler) GenerateFileHandler(w http.ResponseWriter, r *http.Request) {
+const (
+	maxUploadSize    = 10 << 20 // 10 MB
+	fileFormField    = "myFile"
+	sheetFormField   = "sheetName"
+	sasaranTypeField = "sasaranType"
+)
 
-	// Parse the multipart form, checking for size constraints.
-	const maxUploadSize = 10 << 20 // 10 MB
+// GenerateFileHandler handles file uploads and generates a new Excel file.
+func (h *SasaranImunisasiHandler) GenerateFileHandler(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
 		http.Error(w, "File size too large", http.StatusBadRequest)
 		log.Printf("File upload error: %v", err)
 		return
 	}
 
-	// Retrieve the uploaded file from the form.
-	src, fileHeader, err := r.FormFile("myFile")
+	// Handle file upload
+	tempFilePath, err := HandleFileUpload(r)
 	if err != nil {
-		http.Error(w, "Failed to retrieve file", http.StatusBadRequest)
-		log.Printf("Error retrieving file: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+	defer os.Remove(tempFilePath)
+
+	// Retrieves the xlsx source file
+	ctx := context.WithValue(r.Context(), sasaranTypeKey, r.FormValue(sasaranTypeField))
+	sourceFile, err := GetSourceXlsxFile(tempFilePath, r.FormValue(sheetFormField), ctx)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Generate the new xlsx file
+	generatedFile, err := h.SasaranImunisasiService.GenerateFile(*sourceFile)
+	if err != nil {
+		http.Error(w, "Error creating file", http.StatusInternalServerError)
+		return
+	}
+
+	// Set response headers for file download
+	if err := WriteXlsxFileToResponse(w, generatedFile); err != nil {
+		http.Error(w, "Unable to generate file", http.StatusInternalServerError)
+		return
+	}
+}
+
+// HandleFileUpload manages file upload and returns the file path and error.
+func HandleFileUpload(r *http.Request) (string, error) {
+	src, fileHeader, err := r.FormFile(fileFormField)
+	if err != nil {
+		log.Printf("Error retrieving file: %v", err)
+		return EMPTY_STRING, fmt.Errorf("failed to retrieve file")
 	}
 	defer src.Close()
 
 	log.Printf("Uploaded File: %s, Size: %d, MIME: %v", fileHeader.Filename, fileHeader.Size, fileHeader.Header)
 
-	// Create temporary location to save the uploaded file.
+	// Create a temporary file
 	tempFile, err := os.CreateTemp("temp", filepath.Base(fileHeader.Filename)+"-*.xlsx")
 	if err != nil {
-		http.Error(w, "Failed to create temp file", http.StatusInternalServerError)
-		log.Printf("Error to create temp file: %v", err)
-		return
+		log.Printf("Error creating temp file: %v", err)
+		return EMPTY_STRING, fmt.Errorf("failed to create temp file")
 	}
 	defer tempFile.Close()
 
-	// Write uploaded file to temporary location (Save).
+	// Write to temp file
 	if _, err := io.Copy(tempFile, src); err != nil {
-		http.Error(w, "Failed to write to temp file file", http.StatusInternalServerError)
-		log.Printf("Error writing to temp file file: %v", err)
-		return
+		log.Printf("Error writing to temp file: %v", err)
+		return EMPTY_STRING, fmt.Errorf("failed to write to temp file")
 	}
 
-	tempFilePath := tempFile.Name()
-	defer os.Remove(tempFilePath)
+	return tempFile.Name(), nil
+}
 
-	// Open the Excel file.
-	excelizeFile, err := excelize.OpenFile(tempFilePath)
+// GetSourceXlsxFile returns source xlsx file from temp
+func GetSourceXlsxFile(tempFilePath, sheetName string, ctx context.Context) (*SourceXlsxFile, error) {
+	excelFile, err := excelize.OpenFile(tempFilePath)
 	if err != nil {
-		http.Error(w, "Failed to open file", http.StatusInternalServerError)
-		log.Printf("Error opening Excel file: %v", err)
-		return
+		log.Printf("Error opening xlsx source file: %v", err)
+		return nil, fmt.Errorf("error opening xlsx source file")
 	}
-	defer excelizeFile.Close()
+	defer excelFile.Close()
 
-	sourceFile := SourceXlsxFile{
-		Ctx:          context.WithValue(r.Context(), sasaranTypeKey, r.FormValue("sasaranType")),
+	return &SourceXlsxFile{
+		Ctx:          ctx,
 		TempFilePath: tempFilePath,
-		SheetName:    r.FormValue("sheetName"),
-		ExcelizeFile: excelizeFile,
-	}
-	generatedFile, err := h.SasaranImunisasiService.GenerateFile(sourceFile)
-	if err != nil {
-		http.Error(w, "Error creating file", http.StatusInternalServerError)
-		log.Printf("Error generating file: %v", err)
-		return
-	}
+		SheetName:    sheetName,
+		ExcelizeFile: excelFile,
+	}, nil
+}
 
-	// Set the response headers for file download.
+// WriteToResponse sets the headers and writes the generated Excel file to the response.
+func WriteXlsxFileToResponse(w http.ResponseWriter, generatedFile *XlsxGeneratedFile) error {
+	// Set response headers for file download
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, generatedFile.FileName))
 
-	// Write the generated Excel file to the response.
+	// Write the generated Excel file to the response
 	if err := generatedFile.ExcelizeFile.Write(w); err != nil {
-		http.Error(w, "Unable to generate file", http.StatusInternalServerError)
-		return
+		log.Printf("Error writing generated file to response: %v", err)
+		return fmt.Errorf("failed to write Excel file to response: %w", err)
 	}
 
-	log.Println("Successfully uploaded and processed file")
+	log.Printf("Successfully uploaded and processed file: %s", generatedFile.FileName)
+	return nil
 }

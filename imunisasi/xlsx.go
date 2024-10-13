@@ -1,22 +1,11 @@
-package kejar
+package imunisasi
 
 import (
 	"context"
 	"log"
-	"strconv"
 
 	"github.com/xuri/excelize/v2"
 )
-
-// XlsxColumn represents a configuration for a column in an Excel sheet, including
-// its code, index, name, label, and length.
-type XlsxColumn struct {
-	Code   string `yaml:"code"`   // Column code (0, 1, 2, 3, 4, etc.)
-	Index  int    `yaml:"index"`  // Column index
-	Name   string `yaml:"name"`   // Column name
-	Label  string `yaml:"label"`  // Column label (A, B, C, D, etc.)
-	Length int    `yaml:"length"` // Max length of the column data
-}
 
 // SourceXlsxFile contains information about the source Excel file,
 // including its temporary file path, the sheet name, and the opened Excel file.
@@ -40,20 +29,6 @@ type XlsxFileTransformer interface {
 	GenerateFile(sourceFile SourceXlsxFile) (*XlsxGeneratedFile, error)
 }
 
-// CheckForEndOfFile checks if the end of the file is reached for a given column and row.
-func CheckForEndOfFile(column XlsxColumn, rowIndex int, sourceFile SourceXlsxFile) bool {
-	return column.Code == "id" && GetCellValue(sourceFile, column.Label+strconv.Itoa(rowIndex)) == "-"
-}
-
-// PopulateXlsxColumnMap creates a map of XlsxColumn indexed by their code.
-func PopulateXlsxColumnMap(columns []XlsxColumn) map[string]XlsxColumn {
-	columnMap := make(map[string]XlsxColumn, len(columns))
-	for _, col := range columns {
-		columnMap[col.Code] = col
-	}
-	return columnMap
-}
-
 // GetCellValue retrieves the value of a cell; returns "-" if an error occurs or the value is empty.
 func GetCellValue(sourceFile SourceXlsxFile, cell string) string {
 	cellValue, err := sourceFile.ExcelizeFile.GetCellValue(sourceFile.SheetName, cell)
@@ -61,6 +36,28 @@ func GetCellValue(sourceFile SourceXlsxFile, cell string) string {
 		return "-"
 	}
 	return cellValue
+}
+
+// Column represents column characteristics of xlsx file
+type Column struct {
+	Label string
+	Width float64
+}
+
+// GetXlsxColumnLabel generates an Excel column label based on a zero-based index.
+// For example, index 0 returns "A", index 1 returns "B", and so on.
+func GetXlsxColumnLabel(index int) string {
+	if index == 0 {
+		return "A"
+	}
+
+	label := EMPTY_STRING
+	for index > 0 {
+		index-- // Excel column index is 1-based, adjust to 0-based
+		label = string(rune('A'+(index%26))) + label
+		index /= 26
+	}
+	return label
 }
 
 // NewXlsxFile represents the structure of a new Excel file.
@@ -84,21 +81,27 @@ type NewXlsxGenerator interface {
 	SetColumnWidth(newFile NewXlsxFile)
 }
 
+// consts for xlsx file
+const (
+	BLACK_COLOR = "#000000"
+	SHEET_NAME  = "Sheet1"
+	FONT_TYPE   = "Times New Roman"
+)
+
 // CreateNewXlsxFile creates a new Excel file and sets up its styles and structure.
 func CreateNewXlsxFile(ctx context.Context, generator NewXlsxGenerator) (*excelize.File, error) {
 	excelizeFile := excelize.NewFile()
-	sheetName := "Sheet1"
-	index, err := excelizeFile.NewSheet(sheetName)
+	index, err := excelizeFile.NewSheet(SHEET_NAME)
 	if err != nil {
 		return nil, err
 	}
 
 	excelizeFile.SetActiveSheet(index)
-	excelizeFile.SetDefaultFont("Times New Roman")
+	excelizeFile.SetDefaultFont(FONT_TYPE)
 
 	newXlsxFile := NewXlsxFile{
 		Ctx:            ctx,
-		SheetName:      sheetName,
+		SheetName:      SHEET_NAME,
 		ExcelizeFile:   excelizeFile,
 		TitleRowAt:     1,
 		HeaderRowAt:    3,
@@ -117,15 +120,13 @@ func CreateNewXlsxFile(ctx context.Context, generator NewXlsxGenerator) (*exceli
 	return excelizeFile, nil
 }
 
-const blackColor = "#000000"
-
 // setStylesForNewFile creates and assigns styles for the title, header, and body.
 func setStylesForNewFile(file *excelize.File, newFile *NewXlsxFile) error {
 	titleStyle, err := file.NewStyle(&excelize.Style{
 		Font: &excelize.Font{
 			Size:      22,
 			Bold:      true,
-			Color:     blackColor,
+			Color:     BLACK_COLOR,
 			VertAlign: "center",
 		},
 		Alignment: &excelize.Alignment{
@@ -150,17 +151,17 @@ func SetXlsxStyle(file *excelize.File, isHeader bool) int {
 		Font: &excelize.Font{
 			Size:      12,
 			Bold:      isHeader,
-			Color:     blackColor,
+			Color:     BLACK_COLOR,
 			VertAlign: "center",
 		},
 		Alignment: &excelize.Alignment{
 			Horizontal: "center",
 		},
 		Border: []excelize.Border{
-			{Type: "left", Style: 1, Color: blackColor},
-			{Type: "right", Style: 1, Color: blackColor},
-			{Type: "top", Style: 1, Color: blackColor},
-			{Type: "bottom", Style: 1, Color: blackColor},
+			{Type: "left", Style: 1, Color: BLACK_COLOR},
+			{Type: "right", Style: 1, Color: BLACK_COLOR},
+			{Type: "top", Style: 1, Color: BLACK_COLOR},
+			{Type: "bottom", Style: 1, Color: BLACK_COLOR},
 		},
 	})
 	if err != nil {

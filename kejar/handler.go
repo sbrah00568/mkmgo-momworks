@@ -12,36 +12,23 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// TODO: RENAME KEJAR TO IMUNISASI, DELETE KEJAR DEPRECATED CODE LATER
-
-// KejarConfig holds the configuration for the Kejar application, defining the columns
-// for different immunization data and targets.
-type KejarConfig struct {
-	ColumnDataImunisasiBayi   []XlsxColumn `yaml:"column_data_imunisasi_bayi"`
-	ColumnDataImunisasiBaduta []XlsxColumn `yaml:"column_data_imunisasi_baduta"`
-	ColumnSasaranKejarBayi    []XlsxColumn `yaml:"column_sasaran_kejar_bayi"`
-	ColumnSasaranKejarBaduta  []XlsxColumn `yaml:"column_sasaran_kejar_baduta"`
-}
-
-// SasaranKejarHandler handles the HTTP requests for generating Excel files,
+// SasaranImunisasiHandler handles the HTTP requests for generating Excel files,
 // utilizing services that implement XlsxFileTransformer interface for processing bayi and baduta data.
-type SasaranKejarHandler struct {
-	SasaranKejarService     XlsxFileTransformer
+type SasaranImunisasiHandler struct {
 	SasaranImunisasiService XlsxFileTransformer
 }
 
-// NewSasaranKejarHandler initializes a new SasaranKejarHandler with the provided services.
-func NewSasaranKejarHandler(sasaranKejarSvc, sasaranImunisasiSvc XlsxFileTransformer) *SasaranKejarHandler {
-	return &SasaranKejarHandler{
-		SasaranKejarService:     sasaranKejarSvc,
+// NewSasaranImunisasiHandler initializes a new SasaranImunisasiHandler with the provided services.
+func NewSasaranImunisasiHandler(sasaranImunisasiSvc XlsxFileTransformer) *SasaranImunisasiHandler {
+	return &SasaranImunisasiHandler{
 		SasaranImunisasiService: sasaranImunisasiSvc,
 	}
 }
 
-// GenerateFileHandler handles file uploads and generates the new Sasaran Imunisasi Kejar Excel file based on the input.
+// GenerateFileHandler handles file uploads and generates the new Sasaran Imunisasi Excel file based on the input.
 // The input is data imunisasi anak which can be either bayi or baduta. Based on thee data, this api will filter and validate
-// to retrieve Sasaran Kejar which means data anak that yet to receive complete immunization.
-func (h *SasaranKejarHandler) GenerateFileHandler(w http.ResponseWriter, r *http.Request) {
+// to retrieve Sasaran Imunisasi which contains data anak that yet to receive complete immunization.
+func (h *SasaranImunisasiHandler) GenerateFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the multipart form, checking for size constraints.
 	const maxUploadSize = 10 << 20 // 10 MB
@@ -91,7 +78,7 @@ func (h *SasaranKejarHandler) GenerateFileHandler(w http.ResponseWriter, r *http
 	defer excelizeFile.Close()
 
 	sourceFile := SourceXlsxFile{
-		Ctx:          context.WithValue(r.Context(), kejarTypeKey, r.FormValue("kejarType")),
+		Ctx:          context.WithValue(r.Context(), sasaranTypeKey, r.FormValue("sasaranType")),
 		TempFilePath: tempFilePath,
 		SheetName:    r.FormValue("sheetName"),
 		ExcelizeFile: excelizeFile,

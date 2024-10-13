@@ -10,9 +10,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Config holds the application configuration, including Kejar settings.
+// Config holds the application configuration, including settings.
 type Config struct {
-	KejarCfg            kejar.KejarConfig            `yaml:"kejar_config"`             // Configuration specific to the Kejar service
 	SasaranImunisasiCfg kejar.SasaranImunisasiConfig `yaml:"sasaran_imunisasi_config"` // Configuration specific to SasaranImunisasiService
 }
 
@@ -40,14 +39,11 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Initialize the handler with Kejar services
-	sasaranKejarHandler := kejar.NewSasaranKejarHandler(
-		kejar.NewSasaranKejarService(&cfg.KejarCfg),
-		kejar.NewSasaranImunisasiService(&cfg.SasaranImunisasiCfg),
-	)
+	// Initialize the handler with Sasaran Imunisasi services
+	sasaranImunisasiHandler := kejar.NewSasaranImunisasiHandler(kejar.NewSasaranImunisasiService(&cfg.SasaranImunisasiCfg))
 
 	// Define the route and handler for generating files
-	http.HandleFunc("/momworks/sasaran/kejar", sasaranKejarHandler.GenerateFileHandler)
+	http.HandleFunc("/momworks/sasaran/imunisasi", sasaranImunisasiHandler.GenerateFileHandler)
 
 	log.Println("Starting momworks server on localhost:8080...")
 	if err := http.ListenAndServe("localhost:8080", nil); err != nil {

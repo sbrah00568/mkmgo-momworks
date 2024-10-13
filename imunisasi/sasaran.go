@@ -1,4 +1,4 @@
-package kejar
+package imunisasi
 
 import (
 	"context"
@@ -21,7 +21,7 @@ func GetSasaranTypeFromContext(ctx context.Context) string {
 	if sasaranType, ok := ctx.Value(sasaranTypeKey).(string); ok {
 		return sasaranType
 	}
-	return ""
+	return EMPTY_STRING
 }
 
 // GetCurrentDateStr returns the current Indonesian date as a formatted string in the format "Day Month" (e.g., "25 September").

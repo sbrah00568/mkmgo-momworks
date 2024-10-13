@@ -33,20 +33,13 @@ type DataImunisasiAnak struct {
 	JenisKelaminAnak string                     `json:"jenisKelaminAnak"`
 	NamaOrangTua     string                     `json:"namaOrangTua"`
 	Puskesmas        string                     `json:"puskesmas"`
-	MapImunisasi     map[string]DetailImunisasi `json:"mapImunisasi"`
-}
-
-// DetailImunisasi represents detail data of given immunization
-type DetailImunisasi struct {
-	TanggalImunisasi string
-	PosImunisasi     string
-	Status           int
+	DetailImunisasi  map[string]DetailImunisasi `json:"detailImunisasi"`
 }
 
 // NewDataImunisasiAnak creates a new DataImunisasiAnak instance
 func NewDataImunisasiAnak() *DataImunisasiAnak {
 	return &DataImunisasiAnak{
-		MapImunisasi: make(map[string]DetailImunisasi),
+		DetailImunisasi: make(map[string]DetailImunisasi),
 	}
 }
 
@@ -62,22 +55,22 @@ func (data *DataImunisasiAnak) SetCellValue(columnCode, cell string, sourceFile 
 	if handler, exists := cellHandlers[columnCode]; exists {
 		handler()
 	} else if imunisasiCode := GetMapImunisasiCode(columnCode); imunisasiCode != EmptyString {
-		imunisasi := data.MapImunisasi[imunisasiCode]
+		imunisasi := data.DetailImunisasi[imunisasiCode]
 		imunisasi.SetDetailImunisasi(columnCode, cell, sourceFile)
-		data.MapImunisasi[imunisasiCode] = imunisasi
+		data.DetailImunisasi[imunisasiCode] = imunisasi
 	}
 }
 
 // SetDetailImunisasi sets detail imunisasi for DataImunisasiAnak
 func (imunisasi *DetailImunisasi) SetDetailImunisasi(columnCode, cell string, sourceFile SourceXlsxFile) {
-	switch {
-	case strings.Contains(columnCode, StatusImunisasiPrfx):
-		imunisasi.Status = GetStatusImunisasi(GetCellValue(sourceFile, cell))
-	case strings.Contains(columnCode, TanggalImunisasiPrfx):
-		imunisasi.TanggalImunisasi = GetCellValue(sourceFile, cell)
-	case strings.Contains(columnCode, PosImunisasiPrfx):
-		imunisasi.PosImunisasi = GetCellValue(sourceFile, cell)
-	}
+	// switch {
+	// case strings.Contains(columnCode, StatusImunisasiPrfx):
+	// 	imunisasi.Status = GetStatusImunisasi(GetCellValue(sourceFile, cell))
+	// case strings.Contains(columnCode, TanggalImunisasiPrfx):
+	// 	imunisasi.Tanggal = GetCellValue(sourceFile, cell)
+	// case strings.Contains(columnCode, PosImunisasiPrfx):
+	// 	imunisasi.Pos = GetCellValue(sourceFile, cell)
+	// }
 }
 
 // GetMapImunisasiCode returns map imunisasi code based on prefix when found, else returns empty
@@ -108,11 +101,11 @@ func GetStatusImunisasi(status string) int {
 // CountNonIdealImmunizations counts immunizations that are not zero (non-ideal)
 func (data *DataImunisasiAnak) CountNonIdealImmunizations() int {
 	count := 0
-	for _, value := range data.MapImunisasi {
-		if value.Status != 0 {
-			count++
-		}
-	}
+	// for _, value := range data.DetailImunisasi {
+	// 	if value.Status != 0 {
+	// 		count++
+	// 	}
+	// }
 	return count
 }
 

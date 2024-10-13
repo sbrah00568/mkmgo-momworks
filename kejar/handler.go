@@ -12,6 +12,8 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+// TODO: RENAME KEJAR TO IMUNISASI, DELETE KEJAR DEPRECATED CODE LATER
+
 // KejarConfig holds the configuration for the Kejar application, defining the columns
 // for different immunization data and targets.
 type KejarConfig struct {
@@ -24,13 +26,15 @@ type KejarConfig struct {
 // SasaranKejarHandler handles the HTTP requests for generating Excel files,
 // utilizing services that implement XlsxFileTransformer interface for processing bayi and baduta data.
 type SasaranKejarHandler struct {
-	SasaranKejarService XlsxFileTransformer
+	SasaranKejarService     XlsxFileTransformer
+	SasaranImunisasiService XlsxFileTransformer
 }
 
 // NewSasaranKejarHandler initializes a new SasaranKejarHandler with the provided services.
-func NewSasaranKejarHandler(sasaranKejarSvc XlsxFileTransformer) *SasaranKejarHandler {
+func NewSasaranKejarHandler(sasaranKejarSvc, sasaranImunisasiSvc XlsxFileTransformer) *SasaranKejarHandler {
 	return &SasaranKejarHandler{
-		SasaranKejarService: sasaranKejarSvc,
+		SasaranKejarService:     sasaranKejarSvc,
+		SasaranImunisasiService: sasaranImunisasiSvc,
 	}
 }
 
@@ -92,7 +96,7 @@ func (h *SasaranKejarHandler) GenerateFileHandler(w http.ResponseWriter, r *http
 		SheetName:    r.FormValue("sheetName"),
 		ExcelizeFile: excelizeFile,
 	}
-	generatedFile, err := h.SasaranKejarService.GenerateFile(sourceFile)
+	generatedFile, err := h.SasaranImunisasiService.GenerateFile(sourceFile)
 	if err != nil {
 		http.Error(w, "Error creating file", http.StatusInternalServerError)
 		log.Printf("Error generating file: %v", err)

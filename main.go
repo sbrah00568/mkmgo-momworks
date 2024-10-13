@@ -12,7 +12,8 @@ import (
 
 // Config holds the application configuration, including Kejar settings.
 type Config struct {
-	KejarCfg kejar.KejarConfig `yaml:"kejar_config"` // Configuration specific to the Kejar service
+	KejarCfg            kejar.KejarConfig            `yaml:"kejar_config"`             // Configuration specific to the Kejar service
+	SasaranImunisasiCfg kejar.SasaranImunisasiConfig `yaml:"sasaran_imunisasi_config"` // Configuration specific to SasaranImunisasiService
 }
 
 // LoadConfig reads the configuration from a YAML file and returns a Config struct.
@@ -40,7 +41,10 @@ func main() {
 	}
 
 	// Initialize the handler with Kejar services
-	sasaranKejarHandler := kejar.NewSasaranKejarHandler(kejar.NewSasaranKejarService(&cfg.KejarCfg))
+	sasaranKejarHandler := kejar.NewSasaranKejarHandler(
+		kejar.NewSasaranKejarService(&cfg.KejarCfg),
+		kejar.NewSasaranImunisasiService(&cfg.SasaranImunisasiCfg),
+	)
 
 	// Define the route and handler for generating files
 	http.HandleFunc("/momworks/sasaran/kejar", sasaranKejarHandler.GenerateFileHandler)

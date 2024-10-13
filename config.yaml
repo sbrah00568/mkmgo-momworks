@@ -1207,3 +1207,48 @@ kejar_config:
         name: Status Imunisasi PCV 3
         label: R
         length: 16
+
+sasaran_imunisasi_config:
+  column_name:
+    - Nama Anak
+    - Usia Anak
+    - Tanggal Lahir Anak
+    - Jenis Kelamin Anak
+    - Nama Orang Tua
+    - Puskesmas
+
+  detail_imunisasi:
+    - Tanggal Imunisasi
+    - Pos Imunisasi
+    - Status Imunisasi
+
+  detail_imunisasi_lengkap:
+    - Tanggal
+    - Pos
+    - Status
+
+  imunisasi_bayi:
+    - HB0
+    - BCG 1
+    - POLIO 1
+    - POLIO 2
+    - POLIO 3
+    - POLIO 4
+    - DPT-Hb-Hib 1
+    - DPT-Hb-Hib 2
+    - DPT-Hb-Hib 3
+    - IPV 1
+    - IPV 2
+    - ROTA 1
+    - ROTA 2
+    - ROTA 3
+    - PCV 1
+    - PCV 2
+    - MR 1
+    - IDL 1
+
+  imunisasi_baduta:
+    - DPT-Hb-Hib 4
+    - MR 2
+    - IBL 1
+    - PCV 3

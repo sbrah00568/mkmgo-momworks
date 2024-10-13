@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"mkmgo-momworks/imunisasi"
+	"mkmgo-momworks/sasaranimunisasi"
 	"net/http"
 	"os"
 
@@ -12,7 +12,7 @@ import (
 
 // Config holds the application configuration, including settings.
 type Config struct {
-	SasaranImunisasiCfg imunisasi.SasaranImunisasiConfig `yaml:"sasaran_imunisasi_config"` // Configuration specific to SasaranImunisasiService
+	SasaranImunisasiCfg sasaranimunisasi.SasaranImunisasiConfig `yaml:"sasaran_imunisasi_config"` // Configuration specific to SasaranImunisasiService
 }
 
 // LoadConfig reads the configuration from a YAML file and returns a Config struct.
@@ -40,7 +40,7 @@ func main() {
 	}
 
 	// Initialize the handler with Sasaran Imunisasi services
-	sasaranImunisasiHandler := imunisasi.NewSasaranImunisasiHandler(imunisasi.NewSasaranImunisasiService(&cfg.SasaranImunisasiCfg))
+	sasaranImunisasiHandler := sasaranimunisasi.NewSasaranImunisasiHandler(sasaranimunisasi.NewSasaranImunisasiService(&cfg.SasaranImunisasiCfg))
 
 	// Define the route and handler for generating files
 	http.HandleFunc("/momworks/sasaran/imunisasi", sasaranImunisasiHandler.GenerateFileHandler)

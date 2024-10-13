@@ -1,4 +1,4 @@
-package imunisasi
+package sasaranimunisasi
 
 import (
 	"context"

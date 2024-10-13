@@ -49,7 +49,7 @@ func (h *SasaranImunisasiHandler) GenerateFileHandler(w http.ResponseWriter, r *
 
 	// Retrieves the xlsx source file
 	ctx := context.WithValue(r.Context(), sasaranTypeKey, r.FormValue(sasaranTypeField))
-	sourceFile, err := GetSourceXlsxFile(tempFilePath, r.FormValue(sheetFormField), ctx)
+	sourceFile, err := GetXlsxSourceFile(tempFilePath, r.FormValue(sheetFormField), ctx)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -97,8 +97,8 @@ func HandleFileUpload(r *http.Request) (string, error) {
 	return tempFile.Name(), nil
 }
 
-// GetSourceXlsxFile returns source xlsx file from temp
-func GetSourceXlsxFile(tempFilePath, sheetName string, ctx context.Context) (*SourceXlsxFile, error) {
+// GetXlsxSourceFile returns source xlsx file from temp
+func GetXlsxSourceFile(tempFilePath, sheetName string, ctx context.Context) (*XlsxSourceFile, error) {
 	excelFile, err := excelize.OpenFile(tempFilePath)
 	if err != nil {
 		log.Printf("Error opening xlsx source file: %v", err)
@@ -106,7 +106,7 @@ func GetSourceXlsxFile(tempFilePath, sheetName string, ctx context.Context) (*So
 	}
 	defer excelFile.Close()
 
-	return &SourceXlsxFile{
+	return &XlsxSourceFile{
 		Ctx:          ctx,
 		TempFilePath: tempFilePath,
 		SheetName:    sheetName,

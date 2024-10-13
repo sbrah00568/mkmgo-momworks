@@ -7,9 +7,9 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// SourceXlsxFile contains information about the source Excel file,
+// XlsxSourceFile contains information about the source Excel file,
 // including its temporary file path, the sheet name, and the opened Excel file.
-type SourceXlsxFile struct {
+type XlsxSourceFile struct {
 	Ctx          context.Context
 	TempFilePath string
 	SheetName    string
@@ -26,11 +26,11 @@ type XlsxGeneratedFile struct {
 // XlsxFileTransformer is an interface defining the method to generate a new Excel file
 // from a source Excel file.
 type XlsxFileTransformer interface {
-	GenerateFile(sourceFile SourceXlsxFile) (*XlsxGeneratedFile, error)
+	GenerateFile(sourceFile XlsxSourceFile) (*XlsxGeneratedFile, error)
 }
 
 // GetCellValue retrieves the value of a cell; returns "-" if an error occurs or the value is empty.
-func GetCellValue(sourceFile SourceXlsxFile, cell string) string {
+func GetCellValue(sourceFile XlsxSourceFile, cell string) string {
 	cellValue, err := sourceFile.ExcelizeFile.GetCellValue(sourceFile.SheetName, cell)
 	if err != nil || cellValue == "" {
 		return "-"

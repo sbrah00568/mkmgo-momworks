@@ -129,11 +129,71 @@ func SetColumnMap(cfg *SasaranImunisasiConfig, imunisasi []string) map[string]Co
 // GenerateFile processes the provided source Excel file and generates a new xlsx file
 // based on the sasaran imunisasi data and column mappings.
 // Returns a pointer to the generated xlsx file and an error if the generation fails.
-func (svc *SasaranImunisasiService) GenerateFile(sourceFile SourceXlsxFile) (*XlsxGeneratedFile, error) {
-	sasaranImunisasiList := []SasaranImunisasi{}
+func (svc *SasaranImunisasiService) GenerateFile(sourceFile XlsxSourceFile) (*XlsxGeneratedFile, error) {
+	sasaranImunisasiList := []SasaranImunisasi{} // initialize sasaran imunisasi list
 
+	// retrieves column map
 	sasaranColumnMap, _ := svc.GetSasaranColumnMap(sourceFile.Ctx)
+	sourceColumnMap := svc.GetSourceColumnMap(sourceFile)
 
+	rowIndex := 2
+	for {
+		// check end of file
+		if GetCellValue(sourceFile, A+strconv.Itoa(rowIndex)) == HYPHEN {
+			break
+		}
+
+		// populate each rows data
+		isRowValid, sasaranImunisasi := svc.PopulateRowsData(&DataRowPopulator{
+			SasaranColumnMap: sasaranColumnMap,
+			SourceColumnMap:  sourceColumnMap,
+			RowIndex:         rowIndex,
+			SourceFile:       sourceFile,
+		})
+		rowIndex++
+
+		if isRowValid && sasaranImunisasi.CountNonIdealImmunizations() > 0 {
+			sasaranImunisasiList = append(sasaranImunisasiList, sasaranImunisasi)
+		}
+	}
+
+	// sort sasaran imunisasi anak by tanggal lahir from the oldest to the youngest
+	SortSasaranImunisasiAnak(sasaranImunisasiList, func(s SasaranImunisasi) string {
+		return s.TanggalLahirAnak
+	})
+	svc.SasaranImunisasiList = sasaranImunisasiList
+
+	// create new xlsx file containing filtered data from source
+	excelFile, err := CreateNewXlsxFile(sourceFile.Ctx, svc)
+	if err != nil {
+		return nil, err
+	}
+
+	return &XlsxGeneratedFile{
+		FileName:     svc.GetFileName(GetSasaranTypeFromContext(sourceFile.Ctx)) + ".xlsx",
+		ExcelizeFile: excelFile,
+	}, nil
+}
+
+// DataRowPopulator contains the necessary information to populate a row of data into a SasaranImunisasi struct from a source Excel file.
+type DataRowPopulator struct {
+	SasaranColumnMap map[string]Column
+	SourceColumnMap  map[string]Column
+	RowIndex         int
+	SourceFile       XlsxSourceFile
+}
+
+// GetSasaranColumnMap returns sasaran column map and last column label based on sasaran type
+func (svc *SasaranImunisasiService) GetSasaranColumnMap(ctx context.Context) (map[string]Column, string) {
+	sasaranType := GetSasaranTypeFromContext(ctx)
+	if sasaranType == BAYI {
+		return svc.SasaranBayiColumnMap, svc.SasaranBayiColumnMap[STATUS_IDL_1].Label
+	}
+	return svc.SasaranBadutaColumnMap, svc.SasaranBadutaColumnMap[STATUS_IMUNISASI_PCV_3].Label
+}
+
+// GetSourceColumnMap returns source column map which includes name and label (e.g.: name "ID" and label "A")
+func (svc *SasaranImunisasiService) GetSourceColumnMap(sourceFile XlsxSourceFile) map[string]Column {
 	sourceColumnMap := make(map[string]Column)
 
 	// retrieves source label
@@ -148,116 +208,99 @@ func (svc *SasaranImunisasiService) GenerateFile(sourceFile SourceXlsxFile) (*Xl
 		sourceCellIndex++
 	}
 
-	rowIndex := 2
-	for {
-		isRowValid := true
+	return sourceColumnMap
+}
 
-		// check end of file
-		if GetCellValue(sourceFile, A+strconv.Itoa(rowIndex)) == HYPHEN {
+// PopulateRowsData populates the SasaranImunisasi struct with data from the specified row in the source file.
+// It takes a DataRowPopulator which contains information about the row being processed, including
+// mappings of column names and the source file itself. The method returns a boolean indicating
+// whether the row data is valid and a pointer to the populated SasaranImunisasi struct.
+func (svc *SasaranImunisasiService) PopulateRowsData(populator *DataRowPopulator) (bool, SasaranImunisasi) {
+	isRowValid := true
+	sasaranImunisasi := SasaranImunisasi{}
+	strRowIndex := strconv.Itoa(populator.RowIndex)
+	for sasaranColumnName := range populator.SasaranColumnMap {
+		if sasaranColumnName == USIA_ANAK {
+			continue
+		}
+
+		cell := populator.SourceColumnMap[sasaranColumnName].Label + strRowIndex
+		sourceFile := populator.SourceFile
+
+		if IsSourceInvalid(sasaranColumnName, cell, sourceFile) {
+			isRowValid = false
 			break
 		}
 
-		// populate each rows data
-		strRowIndex := strconv.Itoa(rowIndex)
-		sasaranImunisasi := SasaranImunisasi{DetailImunisasi: make(map[string]DetailImunisasi)}
-		for sasaranColumnName := range sasaranColumnMap {
-			if sasaranColumnName == USIA_ANAK {
-				continue
-			}
+		sasaranImunisasi.PopulateSasaranImunisasi(GetCellValue(sourceFile, cell), sasaranColumnName, svc.Cfg)
+	}
 
-			cell := sourceColumnMap[sasaranColumnName].Label + strRowIndex
+	return isRowValid, sasaranImunisasi
+}
 
-			if IsSourceInvalid(sourceColumnMap, strRowIndex, sourceFile) {
-				isRowValid = false
-				break
-			}
-
-			sasaranCellHandler := map[string]func(){
-				NAMA_ANAK:          func() { sasaranImunisasi.NamaAnak = GetCellValue(sourceFile, cell) },
-				TANGGAL_LAHIR_ANAK: func() { sasaranImunisasi.TanggalLahirAnak = GetCellValue(sourceFile, cell) },
-				JENIS_KELAMIN_ANAK: func() { sasaranImunisasi.JenisKelaminAnak = GetCellValue(sourceFile, cell) },
-				NAMA_ORANG_TUA:     func() { sasaranImunisasi.NamaOrangTua = GetCellValue(sourceFile, cell) },
-				PUSKESMAS:          func() { sasaranImunisasi.Puskesmas = GetCellValue(sourceFile, cell) },
-			}
-
-			if cellHandler, exists := sasaranCellHandler[sasaranColumnName]; exists {
-				cellHandler()
-			} else {
-				imunisasiType := EMPTY_STRING
-				for _, imunisasiBayi := range svc.Cfg.ImunisasiBayi {
-					if strings.Contains(sasaranColumnName, imunisasiBayi) {
-						imunisasiType = imunisasiBayi
-						break
-					}
-				}
-				if imunisasiType == EMPTY_STRING {
-					for _, imunisasiBaduta := range svc.Cfg.ImunisasiBaduta {
-						if strings.Contains(sasaranColumnName, imunisasiBaduta) {
-							imunisasiType = imunisasiBaduta
-							break
-						}
-					}
-				}
-
-				detailImunisasi := sasaranImunisasi.DetailImunisasi[imunisasiType]
-
-				cellValue := GetCellValue(sourceFile, cell)
-				switch {
-				case strings.Contains(sasaranColumnName, TANGGAL):
-					if _, exists := detailImunisasi.Tanggal[sasaranColumnName]; exists {
-						detailImunisasi.Tanggal[sasaranColumnName] = cellValue
-					} else {
-						tanggal := make(map[string]string)
-						tanggal[sasaranColumnName] = cellValue
-						detailImunisasi.Tanggal = tanggal
-					}
-				case strings.Contains(sasaranColumnName, POS):
-					if _, exists := detailImunisasi.Pos[sasaranColumnName]; exists {
-						detailImunisasi.Pos[sasaranColumnName] = cellValue
-					} else {
-						pos := make(map[string]string)
-						pos[sasaranColumnName] = cellValue
-						detailImunisasi.Pos = pos
-					}
-				case strings.Contains(sasaranColumnName, STATUS):
-					if _, exists := detailImunisasi.Status[sasaranColumnName]; exists {
-						detailImunisasi.Status[sasaranColumnName] = GetStatusImunisasi(cellValue)
-					} else {
-						status := make(map[string]int)
-						status[sasaranColumnName] = GetStatusImunisasi(cellValue)
-						detailImunisasi.Status = status
-					}
-				}
-				sasaranImunisasi.DetailImunisasi[imunisasiType] = detailImunisasi
-			}
-
-			if sasaranColumnName == TANGGAL_LAHIR_ANAK {
-				sasaranImunisasi.UsiaAnak = sasaranImunisasi.CalculateUsiaAnak()
-			}
-		}
-		rowIndex++
-
-		if isRowValid && sasaranImunisasi.CountNonIdealImmunizations() > 0 {
-			sasaranImunisasiList = append(sasaranImunisasiList, sasaranImunisasi)
+// PopulateSasaranImunisasi populates sasaran imunisasi data for each column name with given cell value
+func (sasaranImunisasi *SasaranImunisasi) PopulateSasaranImunisasi(cellValue, sasaranColumnName string, cfg *SasaranImunisasiConfig) {
+	switch sasaranColumnName {
+	case NAMA_ANAK:
+		sasaranImunisasi.NamaAnak = cellValue
+	case TANGGAL_LAHIR_ANAK:
+		sasaranImunisasi.TanggalLahirAnak = cellValue
+	case JENIS_KELAMIN_ANAK:
+		sasaranImunisasi.JenisKelaminAnak = cellValue
+	case NAMA_ORANG_TUA:
+		sasaranImunisasi.NamaOrangTua = cellValue
+	case PUSKESMAS:
+		sasaranImunisasi.Puskesmas = cellValue
+	default:
+		detailImunisasi := sasaranImunisasi.GetDetailImunisasi(sasaranColumnName, cfg)
+		switch {
+		case strings.Contains(sasaranColumnName, TANGGAL):
+			detailImunisasi.Tanggal[sasaranColumnName] = cellValue
+		case strings.Contains(sasaranColumnName, POS):
+			detailImunisasi.Pos[sasaranColumnName] = cellValue
+		case strings.Contains(sasaranColumnName, STATUS):
+			detailImunisasi.Status[sasaranColumnName] = GetStatusImunisasi(cellValue)
 		}
 	}
 
-	SortDataImunisasiAnak(sasaranImunisasiList, func(s SasaranImunisasi) string {
-		return s.TanggalLahirAnak
-	})
+	if sasaranColumnName == TANGGAL_LAHIR_ANAK {
+		sasaranImunisasi.UsiaAnak = sasaranImunisasi.CalculateUsiaAnak()
+	}
+}
 
-	svc.SasaranImunisasiList = sasaranImunisasiList
-
-	excelFile, err := CreateNewXlsxFile(sourceFile.Ctx, svc)
-	if err != nil {
-		return nil, err
+// GetDetailImunisasi returns detail imunisasi of given sasaran imunisasi based on imunisasi type
+func (s *SasaranImunisasi) GetDetailImunisasi(sasaranColumnName string, cfg *SasaranImunisasiConfig) DetailImunisasi {
+	imunisasiType := s.GetImunisasiType(sasaranColumnName, cfg)
+	if s.DetailImunisasi == nil {
+		s.DetailImunisasi = make(map[string]DetailImunisasi)
 	}
 
-	sasaranType := GetSasaranTypeFromContext(sourceFile.Ctx)
-	return &XlsxGeneratedFile{
-		FileName:     svc.GetFileName(sasaranType) + ".xlsx",
-		ExcelizeFile: excelFile,
-	}, nil
+	if _, exists := s.DetailImunisasi[imunisasiType]; !exists {
+		s.DetailImunisasi[imunisasiType] = DetailImunisasi{
+			Tanggal: make(map[string]string),
+			Pos:     make(map[string]string),
+			Status:  make(map[string]int),
+		}
+	}
+
+	return s.DetailImunisasi[imunisasiType]
+}
+
+// GetImunisasiType returns imunisasi type, for example if the column are Sasaran Imunisasi PCV 2 or Pos Imunisasi PCV 2 then will return "PCV 2"
+func (sasaranImunisasi *SasaranImunisasi) GetImunisasiType(sasaranColumnName string, cfg *SasaranImunisasiConfig) string {
+	for _, imunisasiBayi := range cfg.ImunisasiBayi {
+		if strings.Contains(sasaranColumnName, imunisasiBayi) {
+			return imunisasiBayi
+		}
+	}
+
+	for _, imunisasiBaduta := range cfg.ImunisasiBaduta {
+		if strings.Contains(sasaranColumnName, imunisasiBaduta) {
+			return imunisasiBaduta
+		}
+	}
+
+	return EMPTY_STRING
 }
 
 // GetStatusImunisasi returns an integer status based on the input string.
@@ -282,8 +325,8 @@ func (s *SasaranImunisasi) CountNonIdealImmunizations() int {
 	return count
 }
 
-// SortDataImunisasiAnak sorts data imunisasi anak based on tanggal lahir (DESC)
-func SortDataImunisasiAnak[T any](list []T, dateExtractor func(T) string) {
+// SortSasaranImunisasiAnak sorts data imunisasi anak based on tanggal lahir (DESC)
+func SortSasaranImunisasiAnak[T any](list []T, dateExtractor func(T) string) {
 	sort.Slice(list, func(i, j int) bool {
 		dateFormat := "2006-01-02"
 		parseDate := func(index int) (time.Time, error) {
@@ -306,13 +349,22 @@ func SortDataImunisasiAnak[T any](list []T, dateExtractor func(T) string) {
 	})
 }
 
-// GetSasaranColumnMap returns sasaran column map and last column label based on sasaran type
-func (svc *SasaranImunisasiService) GetSasaranColumnMap(ctx context.Context) (map[string]Column, string) {
-	sasaranType := GetSasaranTypeFromContext(ctx)
-	if sasaranType == BAYI {
-		return svc.SasaranBayiColumnMap, svc.SasaranBayiColumnMap[STATUS_IDL_1].Label
+// IsSourceInvalid checks whether the immunization information from source file is valid
+// based on the given column and row index. It returns true if invalid, otherwise false.
+func IsSourceInvalid(sasaranColumnName, cell string, sourceFile XlsxSourceFile) bool {
+	if strings.Contains(sasaranColumnName, POS) {
+		cellValue := strings.ToLower(GetCellValue(sourceFile, cell))
+		switch {
+		case strings.Contains(cellValue, "cibuntu"):
+			return true
+		case strings.Contains(cellValue, "wanasari"),
+			strings.Contains(cellValue, "dalam gedung"),
+			strings.Contains(cellValue, "oleh sistem"),
+			cellValue == HYPHEN:
+			return false
+		}
 	}
-	return svc.SasaranBadutaColumnMap, svc.SasaranBadutaColumnMap[STATUS_IMUNISASI_PCV_3].Label
+	return false
 }
 
 // CalculateUsiaAnak calculates the age of a child based on their birth date in the format "YYYY-MM-DD".
@@ -335,36 +387,6 @@ func (sasaranImunisasi *SasaranImunisasi) CalculateUsiaAnak() string {
 	}
 
 	return fmt.Sprintf("%d Bulan %d Hari", months, days)
-}
-
-// IsSourceInvalid checks whether the immunization information from source file is valid
-// based on the given column and row index. It returns true if invalid, otherwise false.
-func IsSourceInvalid(sourceColumnMap map[string]Column, strRowIndex string, sourceFile SourceXlsxFile) bool {
-	for name, column := range sourceColumnMap {
-		if strings.Contains(name, POS) {
-			cellValue := strings.ToLower(GetCellValue(sourceFile, column.Label+strRowIndex))
-			if strings.Contains(cellValue, "cibuntu") {
-				return true
-			}
-
-			if strings.Contains(cellValue, "wanasari") {
-				return false
-			}
-
-			if strings.Contains(cellValue, "dalam gedung") {
-				return false
-			}
-
-			if strings.Contains(cellValue, "oleh sistem") {
-				return false
-			}
-
-			if cellValue == "-" {
-				return false
-			}
-		}
-	}
-	return false
 }
 
 // GetFileName returns title based on sasaranType
@@ -476,6 +498,6 @@ func (svc *SasaranImunisasiService) SetColumnWidth(newFile NewXlsxFile) {
 	sheetName := newFile.SheetName
 	sasaranImunisasiMap, _ := svc.GetSasaranColumnMap(newFile.Ctx)
 	for _, column := range sasaranImunisasiMap {
-		file.SetColWidth(sheetName, column.Label, column.Label, 32) // TODO: how to autosize?
+		file.SetColWidth(sheetName, column.Label, column.Label, 32)
 	}
 }
